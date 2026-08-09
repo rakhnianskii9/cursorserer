@@ -1,0 +1,67 @@
+schema_version: 2
+
+catalogs:
+  - catalog_id: telephony
+    name: Telephony Reference Catalog
+    catalog_kind: protocol_reference
+    domain_tags:
+      - telephony
+      - sip
+      - sdp
+      - rtp
+      - webrtc
+      - ims
+      - voip
+    index_path: ${CONTROL_PLANE_ROOT}/reference/telephony/catalog.yaml
+    snapshot_root: ${CONTROL_PLANE_ROOT}/reference/telephony
+    source_policy:
+      local_only: true
+      source_notes_required: true
+      external_fetch: false
+    entry_types:
+      - reference_architecture
+      - call_flow
+      - deployment_architecture
+      - protocol_profile
+      - interconnection_specification
+
+catalog_selection:
+  owner: merger
+  dispatch_key: catalog_id
+  default_catalog: telephony
+  mixed_scope_policy: separate_bounded_scout_slots
+  full_catalog_scan: forbidden
+  scout_max_candidates: 3
+  domain_routes:
+    telephony: telephony
+    sip: telephony
+    sdp: telephony
+    rtp: telephony
+    webrtc: telephony
+    voip: telephony
+    ims: telephony
+
+qualification_policy:
+  default_thresholds:
+    zone_relevance: "70%"
+    reference_applicability: "70%"
+  allowed_relations:
+    - root_zone
+    - causal_predecessor
+  allowed_verification_targets:
+    - invariant
+    - contract
+    - failure_mode
+    - flow_transition
+    - protocol_requirement
+    - deployment_boundary
+    - reference_architecture
+    - interconnection_contract
+  required_impact_targets:
+    - root_hypothesis
+    - remediation_plan
+    - root_confidence
+  coverage_decisions:
+    - REQUIRED
+    - OPTIONAL
+    - NOT_NEEDED

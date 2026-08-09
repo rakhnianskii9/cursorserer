@@ -1,0 +1,999 @@
+schema_version: 1
+
+catalog:
+  catalog_id: telephony
+  name: Telephony Reference Catalog
+  revision: "2026-08-07"
+  catalog_kind: protocol_reference
+  local_root: ${CONTROL_PLANE_ROOT}/reference/telephony
+  source_policy:
+    local_source_notes: true
+    external_fetch: false
+    full_documents_vendored: false
+
+reference_types:
+  reference_architecture:
+    purpose: "Logical components, responsibilities and boundaries."
+  call_flow:
+    purpose: "States, transitions, branches, timers and observable outcomes."
+  deployment_architecture:
+    purpose: "Placement, redundancy, plane separation and operational boundaries."
+  protocol_profile:
+    purpose: "A constrained protocol behaviour and negotiation contract."
+  interconnection_specification:
+    purpose: "Inter-domain or provider-facing interoperability requirements."
+
+source_registry:
+  - source_id: sipconnect-2.0
+    authority: SIP Forum
+    status: industry_profile
+    document: SIPconnect 2.0 Technical Recommendation
+    revision: "2.0, ratified 2016-12"
+    official_url: https://www.sipforum.org/download/sipconnect-technical-recommendation-version-2-0/?wpdmdl=2818
+    local_note: sources/sipconnect-2.0.md
+
+  - source_id: rfc-3261
+    authority: IETF
+    status: normative
+    document: "RFC 3261 — SIP"
+    revision: RFC 3261
+    official_url: https://www.rfc-editor.org/rfc/rfc3261.html
+    local_note: sources/ietf-sip-media.md
+
+  - source_id: rfc-3263
+    authority: IETF
+    status: normative
+    document: "RFC 3263 — Locating SIP Servers"
+    revision: RFC 3263
+    official_url: https://www.rfc-editor.org/rfc/rfc3263.html
+    local_note: sources/ietf-sip-media.md
+
+  - source_id: rfc-3264
+    authority: IETF
+    status: normative
+    document: "RFC 3264 — Offer/Answer Model with SDP"
+    revision: RFC 3264
+    official_url: https://www.rfc-editor.org/rfc/rfc3264.html
+    local_note: sources/ietf-sip-media.md
+
+  - source_id: rfc-4566
+    authority: IETF
+    status: normative
+    document: "RFC 4566 — SDP"
+    revision: RFC 4566
+    official_url: https://www.rfc-editor.org/rfc/rfc4566.html
+    local_note: sources/ietf-sip-media.md
+
+  - source_id: rfc-3550
+    authority: IETF
+    status: normative
+    document: "RFC 3550 — RTP and RTCP"
+    revision: RFC 3550
+    official_url: https://www.rfc-editor.org/rfc/rfc3550.html
+    local_note: sources/ietf-sip-media.md
+
+  - source_id: rfc-3551
+    authority: IETF
+    status: normative
+    document: "RFC 3551 — RTP Audio and Video Conferences"
+    revision: RFC 3551
+    official_url: https://www.rfc-editor.org/rfc/rfc3551.html
+    local_note: sources/ietf-sip-media.md
+
+  - source_id: rfc-5389
+    authority: IETF
+    status: normative
+    document: "RFC 5389 — STUN"
+    revision: RFC 5389
+    official_url: https://www.rfc-editor.org/rfc/rfc5389.html
+    local_note: sources/ietf-sip-media.md
+
+  - source_id: rfc-5766
+    authority: IETF
+    status: normative
+    document: "RFC 5766 — TURN"
+    revision: RFC 5766
+    official_url: https://www.rfc-editor.org/rfc/rfc5766.html
+    local_note: sources/ietf-sip-media.md
+
+  - source_id: rfc-5763
+    authority: IETF
+    status: normative
+    document: "RFC 5763 — DTLS-SRTP Security Context Framework"
+    revision: RFC 5763
+    official_url: https://www.rfc-editor.org/rfc/rfc5763.html
+    local_note: sources/ietf-sip-media.md
+
+  - source_id: rfc-5764
+    authority: IETF
+    status: normative
+    document: "RFC 5764 — DTLS-SRTP"
+    revision: RFC 5764
+    official_url: https://www.rfc-editor.org/rfc/rfc5764.html
+    local_note: sources/ietf-sip-media.md
+
+  - source_id: rfc-8445
+    authority: IETF
+    status: normative
+    document: "RFC 8445 — ICE"
+    revision: RFC 8445
+    official_url: https://www.rfc-editor.org/rfc/rfc8445.html
+    local_note: sources/ietf-sip-media.md
+
+  - source_id: rfc-8827
+    authority: IETF
+    status: normative
+    document: "RFC 8827 — WebRTC Security Architecture"
+    revision: RFC 8827
+    official_url: https://www.rfc-editor.org/rfc/rfc8827.html
+    local_note: sources/ietf-sip-media.md
+
+  - source_id: rfc-8834
+    authority: IETF
+    status: normative
+    document: "RFC 8834 — Media Transport and Use of RTP in WebRTC"
+    revision: RFC 8834
+    official_url: https://www.rfc-editor.org/rfc/rfc8834.html
+    local_note: sources/ietf-sip-media.md
+
+  - source_id: rfc-5486
+    authority: IETF
+    status: normative
+    document: "RFC 5486 — Session Peering Context"
+    revision: RFC 5486
+    official_url: https://www.rfc-editor.org/rfc/rfc5486.html
+    local_note: sources/speermint.md
+
+  - source_id: rfc-6406
+    authority: IETF
+    status: normative
+    document: "RFC 6406 — SPEERMINT Architecture"
+    revision: RFC 6406
+    official_url: https://www.rfc-editor.org/rfc/rfc6406.html
+    local_note: sources/speermint.md
+
+  - source_id: 3gpp-ts-23-228
+    authority: 3GPP
+    status: normative
+    document: "3GPP TS 23.228 — IP Multimedia Subsystem (IMS), Stage 2"
+    revision: "Release 18, version 18.11.0"
+    official_url: https://www.etsi.org/deliver/etsi_TS/123200_123299/123228/18.11.00_60/ts_123228v181100p.pdf
+    local_note: sources/ims.md
+
+entries:
+  - reference_id: telephony.sip.registration
+    catalog_id: telephony
+    category: sip
+    reference_type: protocol_profile
+    title: SIP registration and reachability
+    source_refs:
+      - source_id: sipconnect-2.0
+        local_path: sources/sipconnect-2.0.md
+        anchor: "Registration and static modes"
+      - source_id: rfc-3261
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3261 — SIP"
+    applies_when:
+      - "A provider locates a SIP endpoint through registration or configured reachability."
+      - "The incident concerns REGISTER, Contact, authentication, expiry or reachability."
+    preconditions:
+      - "The selected registration/static profile is known."
+      - "The signaling transport and domain boundary are identified."
+    invariants:
+      - "The selected discovery mode is explicit and observable."
+      - "Registration state, expiry and reachable Contact agree with the active profile."
+    allowed_variants:
+      - "Registration mode and static mode are different valid SIPconnect profiles."
+      - "A border element may terminate or relay registration according to the deployment."
+    failure_modes:
+      - "Registration succeeds but the routed Contact is unreachable."
+      - "Expiry, credentials or transport policy silently disagree between peers."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing sip state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - sip_trace
+      - registration_state
+      - dns_or_static_route
+      - sbc_configuration
+    verification_targets:
+      - protocol_requirement
+      - invariant
+      - failure_mode
+
+  - reference_id: telephony.sip.transaction-lifecycle
+    catalog_id: telephony
+    category: sip
+    reference_type: call_flow
+    title: SIP transaction lifecycle
+    source_refs:
+      - source_id: rfc-3261
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3261 — SIP"
+    applies_when:
+      - "A request, retransmission, provisional response or timeout is under investigation."
+    preconditions:
+      - "The method, transaction branch and transport are available."
+    flow_states:
+      - "request_sent"
+      - "provisional_response"
+      - "final_response"
+      - "completed_or_terminated"
+    invariants:
+      - "Transaction state is not inferred from a single response line."
+      - "Retransmissions and timeout handling are interpreted with the method and transport."
+    failure_modes:
+      - "A client treats a transaction timeout as a successful dialog state."
+      - "A late response is attributed to the wrong branch or call."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing sip state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - sip_branch
+      - cseq
+      - response_code
+      - retransmission_and_timer_log
+    verification_targets:
+      - flow_transition
+      - invariant
+      - failure_mode
+
+  - reference_id: telephony.sip.dialog-lifecycle
+    catalog_id: telephony
+    category: sip
+    reference_type: call_flow
+    title: SIP dialog lifecycle
+    source_refs:
+      - source_id: rfc-3261
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3261 — SIP"
+    applies_when:
+      - "The issue concerns call establishment, in-dialog requests, re-INVITE, UPDATE or teardown."
+    preconditions:
+      - "Call identifiers, tags and dialog direction are available."
+    flow_states:
+      - "early_dialog"
+      - "confirmed_dialog"
+      - "session_modified"
+      - "terminated_dialog"
+    invariants:
+      - "A transaction exchange and a dialog lifecycle are tracked separately."
+      - "In-dialog requests use the dialog route and identity state established for that dialog."
+    failure_modes:
+      - "A re-INVITE or BYE is routed as a new independent call."
+      - "Forked early dialogs are collapsed without evidence."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing sip state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - call_id
+      - local_and_remote_tags
+      - route_set
+      - cseq_progression
+    verification_targets:
+      - flow_transition
+      - contract
+      - failure_mode
+
+  - reference_id: telephony.sip.proxy-routing
+    catalog_id: telephony
+    category: sip
+    reference_type: protocol_profile
+    title: SIP proxy routing and server location
+    source_refs:
+      - source_id: rfc-3261
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3261 — SIP"
+      - source_id: rfc-3263
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3263 — SIP server location"
+    applies_when:
+      - "The call reaches the wrong peer, fails DNS discovery or crosses a proxy/SBC boundary."
+    preconditions:
+      - "The Request-URI, Route set, transport and target domain are known."
+    invariants:
+      - "The selected target and transport can be reconstructed from the SIP URI and routing data."
+      - "Fallback routing is explicit rather than hidden in an unrelated application retry."
+    failure_modes:
+      - "DNS, URI transport and SBC route disagree."
+      - "Topology hiding removes the evidence needed to correlate the next hop."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing sip state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - request_uri
+      - route_and_record_route
+      - dns_records
+      - proxy_or_sbc_route_log
+    verification_targets:
+      - protocol_requirement
+      - deployment_boundary
+      - failure_mode
+
+  - reference_id: telephony.sip.authentication
+    catalog_id: telephony
+    category: sip
+    reference_type: protocol_profile
+    title: SIP identity and authentication boundary
+    source_refs:
+      - source_id: sipconnect-2.0
+        local_path: sources/sipconnect-2.0.md
+        anchor: "Security and interconnection"
+      - source_id: rfc-3261
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3261 — SIP"
+    applies_when:
+      - "Registration, origination or interconnection fails around identity or credentials."
+    preconditions:
+      - "The peer boundary and authentication mechanism are identified."
+    invariants:
+      - "Authentication outcome and asserted identity are correlated with the same SIP transaction."
+      - "Credential failures are not retried as if they were media failures."
+    failure_modes:
+      - "A successful TLS connection is treated as successful SIP authorization."
+      - "The asserted identity and authenticated endpoint are not bound by policy."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing sip state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - sip_response_code
+      - auth_challenge
+      - tls_peer_identity
+      - provider_or_sbc_auth_log
+    verification_targets:
+      - protocol_requirement
+      - invariant
+      - failure_mode
+
+  - reference_id: telephony.sip.failure-response
+    catalog_id: telephony
+    category: sip
+    reference_type: call_flow
+    title: SIP failure response and recovery
+    source_refs:
+      - source_id: rfc-3261
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3261 — SIP"
+      - source_id: sipconnect-2.0
+        local_path: sources/sipconnect-2.0.md
+        anchor: "Call origination and termination"
+    applies_when:
+      - "A call fails, is rejected, times out or falls back to another route."
+    preconditions:
+      - "The failing transaction, response class and route attempt are known."
+    invariants:
+      - "A failure is classified by the response, transaction state and route context."
+      - "Fallback or retry does not create an uncorrelated duplicate call."
+    failure_modes:
+      - "Every failure is retried identically, amplifying provider or network load."
+      - "A final SIP failure is hidden behind a generic application error."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing sip state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - final_response
+      - timer_or_transport_error
+      - route_attempt_id
+      - retry_log
+    verification_targets:
+      - flow_transition
+      - failure_mode
+      - contract
+
+  - reference_id: telephony.sip.peering
+    catalog_id: telephony
+    category: sip
+    reference_type: interconnection_specification
+    title: SIP service-provider peering
+    source_refs:
+      - source_id: rfc-5486
+        local_path: sources/speermint.md
+        anchor: "Session peering model"
+      - source_id: rfc-6406
+        local_path: sources/speermint.md
+        anchor: "Functional components"
+    applies_when:
+      - "A session crosses two SIP service-provider or carrier domains."
+    preconditions:
+      - "Originating, terminating and any indirect provider domains are identified."
+    invariants:
+      - "The inter-domain signaling boundary and routing function are explicit."
+      - "Signaling-path and data-path border responsibilities are separately observable."
+    allowed_variants:
+      - "Direct and indirect peering are valid but have different routing evidence."
+      - "Logical functions may be combined in one deployment component."
+    failure_modes:
+      - "A direct route is assumed while traffic traverses an indirect provider."
+      - "Media border policy is inferred from signaling border policy."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing sip state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - provider_domain
+      - luf_lrf_or_route_lookup
+      - sbe_dbe_or_sbc_policy
+      - interconnect_trace
+    verification_targets:
+      - interconnection_contract
+      - deployment_boundary
+      - failure_mode
+
+  - reference_id: telephony.sdp.offer-answer
+    catalog_id: telephony
+    category: sdp
+    reference_type: protocol_profile
+    title: SDP offer and answer
+    source_refs:
+      - source_id: rfc-3264
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3264 and RFC 4566 — SDP offer/answer"
+      - source_id: rfc-4566
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3264 and RFC 4566 — SDP offer/answer"
+    applies_when:
+      - "A call answers but media, codec or session parameters are wrong."
+    preconditions:
+      - "The relevant SDP offer and answer are captured without redaction of protocol fields."
+    invariants:
+      - "The answer is compatible with the offered media sections and payload formats."
+      - "Address, port, direction and format parameters are checked per media section."
+    allowed_variants:
+      - "Offer/answer may occur in INVITE/200, re-INVITE/200 or UPDATE flows."
+      - "A gateway may adapt a profile when the adaptation is explicit."
+    failure_modes:
+      - "SIP reaches 200 OK while the answer has no mutually usable media."
+      - "A hold or resume direction change is ignored by one endpoint."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing sdp state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - sdp_offer
+      - sdp_answer
+      - media_section_match
+      - codec_selection
+    verification_targets:
+      - protocol_requirement
+      - invariant
+      - failure_mode
+
+  - reference_id: telephony.sdp.media-direction
+    catalog_id: telephony
+    category: sdp
+    reference_type: call_flow
+    title: SDP media direction and session modification
+    source_refs:
+      - source_id: rfc-3264
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3264 and RFC 4566 — SDP offer/answer"
+    applies_when:
+      - "Hold, resume, mute, one-way audio or re-INVITE behaviour is under review."
+    preconditions:
+      - "The before/after SDP media sections and session modification request are known."
+    invariants:
+      - "Direction changes are represented in SDP and correlated with the in-dialog request."
+      - "Resume restores a mutually compatible direction and media path."
+    failure_modes:
+      - "UI mute is treated as network hold without a corresponding protocol state."
+      - "One endpoint resumes locally while the peer remains inactive."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing sdp state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - reinvite_or_update
+      - media_direction
+      - signaling_state
+      - media_packet_flow
+    verification_targets:
+      - flow_transition
+      - invariant
+      - failure_mode
+
+  - reference_id: telephony.rtp.rtp-rtcp
+    catalog_id: telephony
+    category: rtp
+    reference_type: protocol_profile
+    title: RTP and RTCP media transport
+    source_refs:
+      - source_id: rfc-3550
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3550 and RFC 3551 — RTP/RTCP"
+      - source_id: rfc-3551
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3550 and RFC 3551 — RTP/RTCP"
+    applies_when:
+      - "Signaling succeeds but audio is absent, one-way, distorted or degraded."
+    preconditions:
+      - "The negotiated payload type, ports and endpoint addresses are available."
+    invariants:
+      - "RTP payload/profile agrees with the SDP contract."
+      - "Sequence, timestamp and SSRC continuity are interpreted with the selected stream."
+      - "RTCP observations are kept separate from SIP dialog state."
+    failure_modes:
+      - "Packets arrive on a port or payload type not selected by SDP."
+      - "RTP is present in one direction while the reverse path is blocked or misrouted."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing rtp state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - rtp_packets
+      - rtcp_reports
+      - sequence_and_ssrc
+      - jitter_loss_and_rtt
+    verification_targets:
+      - protocol_requirement
+      - invariant
+      - failure_mode
+
+  - reference_id: telephony.nat.ice
+    catalog_id: telephony
+    category: nat-traversal
+    reference_type: protocol_profile
+    title: ICE candidate gathering and nomination
+    source_refs:
+      - source_id: rfc-8445
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 8445, RFC 5389 and RFC 5766 — ICE, STUN and TURN"
+    applies_when:
+      - "WebRTC or ICE-enabled media fails across NAT, firewall or multihoming."
+    preconditions:
+      - "Local and remote candidates, ICE credentials and checklist state are available."
+    invariants:
+      - "Candidates are exchanged through the selected signaling/session description."
+      - "Connectivity checks and nomination produce an identifiable selected pair."
+    allowed_variants:
+      - "Direct, server-reflexive and relayed candidates are valid according to topology."
+      - "ICE-Lite and full ICE have different responsibilities."
+    failure_modes:
+      - "Candidate gathering succeeds but no pair is nominated."
+      - "A selected pair exists but the media endpoint uses a different address or port."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing nat-traversal state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - ice_candidates
+      - checklist_state
+      - nominated_pair
+      - consent_or_keepalive_state
+    verification_targets:
+      - flow_transition
+      - protocol_requirement
+      - failure_mode
+
+  - reference_id: telephony.nat.stun-turn
+    catalog_id: telephony
+    category: nat-traversal
+    reference_type: deployment_architecture
+    title: STUN/TURN relay placement
+    source_refs:
+      - source_id: rfc-5389
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 8445, RFC 5389 and RFC 5766 — ICE, STUN and TURN"
+      - source_id: rfc-5766
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 8445, RFC 5389 and RFC 5766 — ICE, STUN and TURN"
+    applies_when:
+      - "Connectivity depends on public address discovery or relayed media."
+    preconditions:
+      - "Network topology, relay allocation policy and credential lifetime are known."
+    invariants:
+      - "TURN allocation and relay reachability match the candidate advertised to the peer."
+      - "Relay use is observable and does not silently change the expected media path."
+    failure_modes:
+      - "TURN credentials expire before ICE checks complete."
+      - "Firewall policy permits signaling but blocks the relay allocation or media ports."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing nat-traversal state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - stun_turn_logs
+      - relay_allocation
+      - firewall_and_security_group
+      - selected_media_path
+    verification_targets:
+      - deployment_boundary
+      - invariant
+      - failure_mode
+
+  - reference_id: telephony.security.tls-dtls-srtp
+    catalog_id: telephony
+    category: security
+    reference_type: protocol_profile
+    title: SIP TLS and DTLS-SRTP security chain
+    source_refs:
+      - source_id: sipconnect-2.0
+        local_path: sources/sipconnect-2.0.md
+        anchor: "Security and interconnection"
+      - source_id: rfc-5763
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 5763, RFC 5764 and RFC 8827 — secure media"
+      - source_id: rfc-5764
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 5763, RFC 5764 and RFC 8827 — secure media"
+      - source_id: rfc-8827
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 5763, RFC 5764 and RFC 8827 — secure media"
+    applies_when:
+      - "Signaling or WebRTC media security negotiation is failing or being audited."
+    preconditions:
+      - "The transport, peer identity and selected media security profile are known."
+    invariants:
+      - "TLS, DTLS, certificate/fingerprint and SRTP states are checked separately."
+      - "The remote SDP fingerprint is bound to the authenticated DTLS peer."
+    failure_modes:
+      - "A valid SIP/TLS connection is treated as proof that media is encrypted."
+      - "DTLS completes against a fingerprint that is not the one signaled for the session."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing security state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - tls_handshake
+      - certificate_or_fingerprint
+      - dtls_state
+      - srtp_context
+    verification_targets:
+      - protocol_requirement
+      - invariant
+      - failure_mode
+
+  - reference_id: telephony.topology.sbc-media-relay
+    catalog_id: telephony
+    category: topology
+    reference_type: reference_architecture
+    title: SBC and media-relay boundary
+    source_refs:
+      - source_id: sipconnect-2.0
+        local_path: sources/sipconnect-2.0.md
+        anchor: "Reference architecture"
+      - source_id: rfc-6406
+        local_path: sources/speermint.md
+        anchor: "Functional components"
+    applies_when:
+      - "A border component terminates, relays or anchors SIP and/or media."
+    preconditions:
+      - "Signaling and media responsibilities of the border component are declared."
+    invariants:
+      - "SIP topology policy and media anchoring policy are independently observable."
+      - "The relay preserves or intentionally transforms the negotiated media contract."
+    allowed_variants:
+      - "Signaling and media may terminate on one component or separate components."
+      - "Logical SBE/DBE/SBC responsibilities may be combined."
+    failure_modes:
+      - "The SBC rewrites SDP without a corresponding media route."
+      - "A media relay is assumed from signaling headers but is not in the packet path."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing topology state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - sbc_config
+      - rewritten_sdp
+      - media_socket_or_relay_log
+      - packet_capture_or_rtp_stats
+    verification_targets:
+      - reference_architecture
+      - deployment_boundary
+      - failure_mode
+
+  - reference_id: telephony.topology.pbx-provider
+    catalog_id: telephony
+    category: topology
+    reference_type: interconnection_specification
+    title: Enterprise PBX to provider interconnection
+    source_refs:
+      - source_id: sipconnect-2.0
+        local_path: sources/sipconnect-2.0.md
+        anchor: "Reference architecture"
+      - source_id: sipconnect-2.0
+        local_path: sources/sipconnect-2.0.md
+        anchor: "Call origination and termination"
+    applies_when:
+      - "An enterprise PBX or softphone connects to a service provider trunk."
+    preconditions:
+      - "The provider-facing signaling and media reference points are defined."
+    invariants:
+      - "The selected provider profile defines both signaling and media expectations."
+      - "Call direction, endpoint role and provider response handling are explicit."
+    failure_modes:
+      - "Registration or call setup is tested without validating the media reference point."
+      - "A PBX/provider profile is replaced by generic SIP assumptions."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing topology state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - trunk_profile
+      - sip_trace
+      - sdp_trace
+      - provider_interop_result
+    verification_targets:
+      - interconnection_contract
+      - protocol_requirement
+      - failure_mode
+
+  - reference_id: telephony.call-flows.inbound
+    catalog_id: telephony
+    category: call-flows
+    reference_type: call_flow
+    title: Inbound SIP call establishment
+    source_refs:
+      - source_id: sipconnect-2.0
+        local_path: sources/sipconnect-2.0.md
+        anchor: "Call origination and termination"
+      - source_id: rfc-3261
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3261 — SIP"
+      - source_id: rfc-3264
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3264 and RFC 4566 — SDP offer/answer"
+    applies_when:
+      - "A provider-originated call must reach an enterprise or application endpoint."
+    preconditions:
+      - "Ingress boundary, target lookup and media endpoint selection are known."
+    flow_states:
+      - "ingress_request"
+      - "provisional_processing"
+      - "final_answer_or_failure"
+      - "acknowledged_session"
+      - "media_established_or_failed"
+    invariants:
+      - "Each signaling transition is correlated to one call/dialog identity."
+      - "Final answer and media establishment are verified separately."
+      - "Optional provisional, fork and failure branches remain explicit."
+    failure_modes:
+      - "A 200 response is recorded as a connected call before ACK/media evidence."
+      - "Ingress routing succeeds but the selected operator endpoint is unavailable."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing call-flows state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - ingress_sip_trace
+      - target_lookup
+      - sdp_offer_answer
+      - ack_and_media_state
+    verification_targets:
+      - flow_transition
+      - invariant
+      - failure_mode
+
+  - reference_id: telephony.call-flows.outbound
+    catalog_id: telephony
+    category: call-flows
+    reference_type: call_flow
+    title: Outbound SIP call establishment
+    source_refs:
+      - source_id: sipconnect-2.0
+        local_path: sources/sipconnect-2.0.md
+        anchor: "Call origination and termination"
+      - source_id: rfc-3263
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3263 — SIP server location"
+      - source_id: rfc-3264
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3264 and RFC 4566 — SDP offer/answer"
+    applies_when:
+      - "An enterprise or application endpoint originates a provider-facing call."
+    preconditions:
+      - "Number/URI normalization, provider route and authorization profile are known."
+    flow_states:
+      - "egress_request"
+      - "route_selected"
+      - "provisional_processing"
+      - "answered_or_failed"
+      - "media_established_or_failed"
+    invariants:
+      - "The selected provider route and identity are traceable from the originating request."
+      - "Provider answer, SDP negotiation and media state are independently correlated."
+    failure_modes:
+      - "A route retry creates duplicate provider attempts without correlation."
+      - "Number normalization passes application validation but fails provider routing."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing call-flows state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - normalized_destination
+      - egress_sip_trace
+      - provider_route
+      - sdp_and_rtp_state
+    verification_targets:
+      - flow_transition
+      - interconnection_contract
+      - failure_mode
+
+  - reference_id: telephony.call-flows.cancel-failure
+    catalog_id: telephony
+    category: call-flows
+    reference_type: call_flow
+    title: Cancellation, timeout and failure recovery
+    source_refs:
+      - source_id: rfc-3261
+        local_path: sources/ietf-sip-media.md
+        anchor: "RFC 3261 — SIP"
+      - source_id: sipconnect-2.0
+        local_path: sources/sipconnect-2.0.md
+        anchor: "Call origination and termination"
+    applies_when:
+      - "A ringing call is cancelled or a call fails before, during or after answer."
+    preconditions:
+      - "The active transaction/dialog and retry policy are known."
+    flow_states:
+      - "early_session"
+      - "cancel_or_timeout"
+      - "downstream_cleanup"
+      - "correlated_terminal_state"
+    invariants:
+      - "Cancellation and timeout are correlated to the correct transaction/dialog."
+      - "Downstream legs and application lifecycle state reach a terminal, observable result."
+    failure_modes:
+      - "The UI reports a hangup while a downstream leg remains active."
+      - "Timeout recovery creates an orphaned media session or duplicate call."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing call-flows state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - cancel_bye_or_timeout
+      - downstream_cleanup
+      - lifecycle_state
+      - orphan_media_check
+    verification_targets:
+      - flow_transition
+      - invariant
+      - failure_mode
+
+  - reference_id: telephony.deployment.signaling-media-separation
+    catalog_id: telephony
+    category: deployment
+    reference_type: deployment_architecture
+    title: Signaling and media plane separation
+    source_refs:
+      - source_id: sipconnect-2.0
+        local_path: sources/sipconnect-2.0.md
+        anchor: "Reference architecture"
+      - source_id: 3gpp-ts-23-228
+        local_path: sources/ims.md
+        anchor: "Signaling and media"
+    applies_when:
+      - "A system has separate SIP control, media relay, gateway or policy components."
+    preconditions:
+      - "The signaling path, media path and control callbacks can be traced independently."
+    invariants:
+      - "A healthy signaling path is not used as proof of healthy media."
+      - "Each plane has an owner, reachability policy and observable health signal."
+    failure_modes:
+      - "SIP callbacks are healthy while media ports or relay paths are unavailable."
+      - "Control-plane lifecycle state is updated without authoritative media evidence."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing deployment state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - signaling_health
+      - media_health
+      - relay_or_gateway_state
+      - lifecycle_correlation
+    verification_targets:
+      - deployment_boundary
+      - invariant
+      - failure_mode
+
+  - reference_id: telephony.deployment.observability-correlation
+    catalog_id: telephony
+    category: deployment
+    reference_type: deployment_architecture
+    title: End-to-end call correlation and observability
+    source_refs:
+      - source_id: sipconnect-2.0
+        local_path: sources/sipconnect-2.0.md
+        anchor: "Evidence targets"
+      - source_id: rfc-3550
+        local_path: sources/ietf-sip-media.md
+        anchor: "Evidence targets"
+    applies_when:
+      - "A call crosses providers, SBCs, media relays, clients and application lifecycle workers."
+    preconditions:
+      - "The system has a declared correlation strategy for signaling, media and business events."
+    invariants:
+      - "SIP identity, media stream identity and application call identity can be joined without guessing."
+      - "Missing evidence is represented as unknown rather than converted into success."
+    failure_modes:
+      - "A webhook, SIP dialog and RTP stream are attributed to different calls."
+      - "Healthy container status hides a failed interconnection or media path."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing deployment state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - call_correlation_id
+      - sip_dialog_identity
+      - media_ssrc_or_stream_id
+      - webhook_and_worker_events
+    verification_targets:
+      - contract
+      - deployment_boundary
+      - failure_mode
+
+  - reference_id: telephony.ims.control-plane
+    catalog_id: telephony
+    category: ims
+    reference_type: reference_architecture
+    title: IMS CSCF control-plane responsibilities
+    source_refs:
+      - source_id: 3gpp-ts-23-228
+        local_path: sources/ims.md
+        anchor: "Control-plane roles"
+    applies_when:
+      - "An IMS or VoLTE-style control plane is being designed or diagnosed."
+    preconditions:
+      - "The release/profile and logical IMS roles are known."
+    invariants:
+      - "UE, P-CSCF, I-CSCF and S-CSCF responsibilities are distinguishable in the flow."
+      - "Registration, authentication, session control and service invocation are not collapsed into one opaque hop."
+    allowed_variants:
+      - "Logical functions may be deployed in different physical topologies."
+    failure_modes:
+      - "A downstream service failure is misclassified as a P-CSCF transport failure."
+      - "A trace cannot identify which CSCF responsibility produced a decision."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing ims state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - ims_hop_identity
+      - sip_registration
+      - subscriber_lookup
+      - application_server_invocation
+    verification_targets:
+      - reference_architecture
+      - deployment_boundary
+      - failure_mode
+
+  - reference_id: telephony.ims.interconnection
+    catalog_id: telephony
+    category: ims
+    reference_type: interconnection_specification
+    title: IMS interconnection and border functions
+    source_refs:
+      - source_id: 3gpp-ts-23-228
+        local_path: sources/ims.md
+        anchor: "Procedures and interconnection"
+      - source_id: rfc-6406
+        local_path: sources/speermint.md
+        anchor: "Routing and interconnection checks"
+    applies_when:
+      - "An IMS domain interconnects with another provider, gateway or legacy network."
+    preconditions:
+      - "The border function, signaling route and media/gateway path are identified."
+    invariants:
+      - "Inter-domain policy and internal IMS control responsibilities are separately observable."
+      - "Media adaptation or gateway interworking is explicit in the selected profile."
+    failure_modes:
+      - "Interconnect routing is validated only from internal CSCF state."
+      - "A gateway adapts signaling or media without a traceable profile contract."
+    diagnostic_branch:
+      - "Start with the entry preconditions and collect the listed observable evidence."
+      - "Compare the first failing ims state or boundary with the exact source anchor."
+      - "Follow the listed failure modes and mark UNKNOWN when the evidence cannot distinguish them."
+    observable_evidence:
+      - border_route
+      - interconnect_sip_trace
+      - gateway_media_state
+      - policy_decision
+    verification_targets:
+      - interconnection_contract
+      - deployment_boundary
+      - failure_mode

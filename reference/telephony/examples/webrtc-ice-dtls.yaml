@@ -1,0 +1,63 @@
+kind: WAVE_DECISION
+fixture: true
+blueprint:
+  catalog_id: telephony
+  catalog_revision: "2026-08-07"
+  coverage_decision: REQUIRED
+  coverage_required: true
+  coverage_reason:
+    - nat_traversal_and_media_relevant
+    - root_confidence_can_change
+  qualified_pairs:
+    - pair_id: browser-media:telephony.nat.ice
+      zone_id: browser-media
+      blueprint_id: telephony.nat.ice
+      reference_id: telephony.nat.ice
+      catalog_id: telephony
+      reference_type: protocol_profile
+      zone_relevance: "91%"
+      reference_applicability: "93%"
+      blueprint_applicability: "93%"
+      relation: causal_predecessor
+      verification_targets:
+        - flow_transition
+        - protocol_requirement
+        - failure_mode
+      impact_targets:
+        - root_hypothesis
+        - root_confidence
+      evidence_refs:
+        - FIXTURE-ICE-STATE
+        - FIXTURE-BROWSER-TELEMETRY
+    - pair_id: browser-media:telephony.security.tls-dtls-srtp
+      zone_id: browser-media
+      blueprint_id: telephony.security.tls-dtls-srtp
+      reference_id: telephony.security.tls-dtls-srtp
+      catalog_id: telephony
+      reference_type: protocol_profile
+      zone_relevance: "88%"
+      reference_applicability: "90%"
+      blueprint_applicability: "90%"
+      relation: causal_predecessor
+      verification_targets:
+        - protocol_requirement
+        - invariant
+        - failure_mode
+      impact_targets:
+        - root_hypothesis
+        - remediation_plan
+      evidence_refs:
+        - FIXTURE-DTLS-STATE
+        - FIXTURE-SDP-FINGERPRINT
+  coverage_budget:
+    max_pairs: 2
+    overflow_action: TRIAGE
+  coverage_results:
+    - pair_id: browser-media:telephony.nat.ice
+      status: UNKNOWN
+      evidence_refs:
+        - FIXTURE-ICE-STATE
+    - pair_id: browser-media:telephony.security.tls-dtls-srtp
+      status: MATCH
+      evidence_refs:
+        - FIXTURE-DTLS-STATE

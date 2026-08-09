@@ -1,0 +1,40 @@
+kind: WAVE_DECISION
+fixture: true
+blueprint:
+  catalog_id: telephony
+  catalog_revision: "2026-08-07"
+  coverage_decision: REQUIRED
+  coverage_required: true
+  coverage_reason:
+    - telephony_call_flow_relevant
+    - root_confidence_can_change
+  qualified_pairs:
+    - pair_id: inbound-route:telephony.call-flows.inbound
+      zone_id: inbound-route
+      blueprint_id: telephony.call-flows.inbound
+      reference_id: telephony.call-flows.inbound
+      catalog_id: telephony
+      reference_type: call_flow
+      zone_relevance: "94%"
+      reference_applicability: "96%"
+      blueprint_applicability: "96%"
+      relation: root_zone
+      verification_targets:
+        - flow_transition
+        - invariant
+        - failure_mode
+      impact_targets:
+        - root_hypothesis
+        - remediation_plan
+      evidence_refs:
+        - FIXTURE-SIP-TRACE
+        - FIXTURE-CODE-ROUTE
+  coverage_budget:
+    max_pairs: 1
+    overflow_action: TRIAGE
+  coverage_results:
+    - pair_id: inbound-route:telephony.call-flows.inbound
+      status: DEVIATION
+      evidence_refs:
+        - FIXTURE-SIP-TRACE
+        - FIXTURE-SDP-TRACE
