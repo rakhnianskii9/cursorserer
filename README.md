@@ -275,11 +275,26 @@ MIT. See `LICENSE` and `NOTICE`.
 
 ---
 
-## About this archive
+## 👤 About the author
 
-This repository provides a portable Cursor control-plane template. It is
-designed to be installed into a project-local or user-global control-plane
-directory through Cursor Chat, with private runtime files materialized only
-after the user's explicit confirmation.
+I'm Vladislav Rakhnianskii, solo founder of **RKX — Ad-to-Revenue OS for Meta Advertisers**.
 
-For legal attribution and licensing, see `LICENSE` and `NOTICE`.
+RKX connects acquisition, measurement, sales, messaging, and AI workflows around Meta in one operating system.
+
+I have been building the platform full-time since 2024, completely self-funded. We started charging two months ago and currently have:
+- 5 paying customers
+- $900 MRR
+- $3,000+ collected
+- 100% referral-driven growth
+- Zero paid marketing
+
+The product is already built and operational. I'm currently looking for a **strategic MarTech / SaaS angel investor** to help scale the company.
+
+**Product:** 
+https://rakhnianskii.com/
+
+**Reach out:** 
+https://wa.me/message/E26AP7ZUDRTLD1
+
+**LinkedIn:** 
+https://www.linkedin.com/in/rakhnianskii/
