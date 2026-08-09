@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "kind": "BOOTSTRAP_WAVE_SPEC",
+  "run_id": "fixture-run",
+  "wave_id": 1,
+  "token_mode": "API",
+  "billing_credential_scope": "API_CREDENTIALS",
+  "spec_revision": "fixture-run:wave-1:abc123",
+  "decision_id": null,
+  "decision": null,
+  "confidence": "0%",
+  "confidence_basis": "Bootstrap has no merged evidence.",
+  "hypotheses": [
+    {
+      "hypothesis_id": "H-1",
+      "statement": "Fixture candidate",
+      "state": "CANDIDATE",
+      "confidence": "0%",
+      "confidence_basis": "Fixture bootstrap."
+    }
+  ],
+  "slots": [
+    {
+      "slot_id": "CODE-1",
+      "hypothesis_id": "H-1",
+      "source": "CODE",
+      "group": "CODE",
+      "expected_fact": "The fixture contract exists.",
+      "expected_decision_change": "It can validate the schema route.",
+      "requirement": "REQUIRED",
+      "correlation_refs": ["fixture-run"],
+      "searchability": "KNOWN",
+      "allowed_tools": ["ReadFile"],
+      "output_schema": "FACT_EVIDENCE_PACKET"
+    }
+  ],
+  "dispatch": {
+    "mode": "PARALLEL",
+    "join": "MERGER",
+    "coverage_budget": 0
+  },
+  "stop_condition": "Stop after the fixture contract is checked."
+}

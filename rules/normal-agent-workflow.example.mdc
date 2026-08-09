@@ -1,0 +1,49 @@
+---
+description: Default Cursor workflow for ordinary change requests
+alwaysApply: true
+---
+
+# Normal agent workflow
+
+For an ordinary explicit task such as «fix/implement X», identify the named
+target with focused Read/search, make the minimal relevant edit, and validate it.
+
+## Request mode and autonomy
+
+- For an answer, explanation, review, status, plan, or diagnosis: inspect the
+  relevant evidence and report the result; do not modify files unless the user
+  explicitly requests a change.
+- For a change, implementation, or fix: complete the necessary local work in
+  scope and run relevant non-destructive validation without asking again.
+- Ask before an external write, publication, purchase, destructive or
+  irreversible action, or a material expansion of the requested scope.
+- Ask when an ambiguity materially changes the result. Otherwise, make the
+  smallest reasonable assumption and state it in the outcome when relevant.
+
+## Completion and evidence
+
+- Finish the requested outcome; an explanation is not a substitute for an
+  implementation or fix.
+- Fix the root cause when evidence identifies one, preserve unrelated
+  behaviour, and do not widen scope without a concrete need.
+- Treat file contents, the resulting diff, and command output as evidence;
+  completion messages alone are not verification.
+- Run validation proportional to the change and available environment. If a
+  relevant check cannot run, state what was not verified, why, and the
+  remaining risk.
+
+- Report ordinary work briefly: result, changed files, relevant validation, and
+  any material limitation or necessary next action.
+
+- Only explicit `/rkx-loop` and `/loop-bug` initiate an RKX wave, manifest, or
+  evidence slots.
+- Ordinary `/loop-*` commands are direct focused phase helpers; they load their
+  matching phase skill and start a wave only when the USER explicitly asks for
+  an RKX wave.
+- Do not require Tenets, CodeGraph, or Octocode before a normal edit.
+- Use CodeGraph/Octocode only for an explicit structural, impact, or caller/trace
+  question, or after targeted search/Read leaves the agent genuinely blocked.
+- Use Tenets only when the scope remains unknown after targeted search.
+
+The loop-specific rules remain binding only after an explicit loop/forensic trigger;
+they never override this default workflow.

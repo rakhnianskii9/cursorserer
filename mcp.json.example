@@ -1,0 +1,49 @@
+{
+  "mcpServers": {},
+  "_publicTemplate": {
+    "installPolicy": "Activate only after capability preflight and user confirmation.",
+    "packagePolicy": "Every package must use a reviewed immutable version.",
+    "secretPolicy": "Use ${env:NAME}, OAuth, or a Cursor prompt. Never put secret values here.",
+    "capabilities": {
+      "crash": {
+        "command": "${MCP_NODE_COMMAND}",
+        "args": ["crash-mcp@${CRASH_MCP_VERSION}"]
+      },
+      "context7": {
+        "command": "${MCP_NODE_COMMAND}",
+        "args": ["@upstash/context7-mcp@${CONTEXT7_MCP_VERSION}"],
+        "env": {
+          "CONTEXT7_API_KEY": "${env:CONTEXT7_API_KEY}"
+        }
+      },
+      "octocode": {
+        "command": "${MCP_NODE_COMMAND}",
+        "args": ["octocode-mcp@${OCTOCODE_MCP_VERSION}"],
+        "cwd": "${workspaceFolder}"
+      },
+      "postgres": {
+        "command": "${MCP_NODE_COMMAND}",
+        "args": [
+          "@modelcontextprotocol/server-postgres@${POSTGRES_MCP_VERSION}",
+          "${env:POSTGRES_READONLY_URL}"
+        ]
+      },
+      "mcp-files": {
+        "command": "${MCP_NODE_COMMAND}",
+        "args": ["mcp-files@${MCP_FILES_VERSION}"]
+      },
+      "codegraph": {
+        "command": "${CODEGRAPH_COMMAND}",
+        "args": ["serve", "--mcp", "--path", "${workspaceFolder}"]
+      },
+      "tenets": {
+        "command": "${workspaceFolder}/.tenets/run-mcp.sh",
+        "cwd": "${workspaceFolder}"
+      },
+      "Meta Developer Tools": {
+        "type": "http",
+        "url": "${META_DEVTOOLS_MCP_URL}"
+      }
+    }
+  }
+}

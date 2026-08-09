@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "WAVE_DECISION",
+  "run_id": "fixture-run",
+  "wave_id": 1,
+  "token_mode": "CURSOR",
+  "billing_credential_scope": "CURSOR_SUBSCRIPTION",
+  "spec_revision": "fixture-run:wave-1:blocker",
+  "decision_id": "fixture-blocker-1",
+  "decision": "HARD_BLOCKER",
+  "advocate_mode": "hard",
+  "advocate_status": "PENDING",
+  "advocate_passed": false,
+  "recovery_attempted": false,
+  "recovery_class": "NONE",
+  "confidence": "100%",
+  "confidence_basis": "The access block is directly observed.",
+  "hypotheses": [],
+  "slots": [],
+  "dispatch": {
+    "mode": "PARALLEL",
+    "join": "MERGER",
+    "coverage_budget": 0
+  },
+  "stop_condition": "Stop until the named access precondition is available."
+}

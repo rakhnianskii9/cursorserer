@@ -1,0 +1,30 @@
+---
+description: UI verification — built-in Cursor @Browser only (Browser Tab + cursor-ide-browser MCP). External browsers are prohibited.
+alwaysApply: true
+---
+
+# Built-in Browser ONLY (NORMATIVE)
+
+## Required UI verification channel
+
+- **Only** built-in Cursor **@Browser**: Browser Tab, `workbench.browser.*`, MCP **cursor-ide-browser**.
+- Agent sequence: `browser_navigate` → `browser_snapshot` → `browser_take_screenshot` (`browser_lock` / `browser_click` when needed).
+- Dev URL: `bash scripts/resolve-dev-browser-url.sh` or `.dev/forwarded-ports.env` (dynamic forward: `localhost:<DEV_LOCAL_PORT>/`, not necessarily `:${DEV_APP_PORT}`).
+
+## PROHIBITED
+
+- Open an **external** browser: Chrome, Safari, Edge, Firefox, `xdg-open`, `open`, “Open in Browser”, “Open in External Browser”.
+- Recommend an external browser or Playwright/Chrome DevTools MCP **instead of** Browser Tab for post-change UI evidence.
+- Use Simple Browser (`simpleBrowser.show`) as a user workaround — only provide the URL hint + built-in Browser Tab.
+- `remote.portsAttributes` with `onAutoForward: "openBrowser"` for dev ports ${AUX_APP_PORT_A}–${AUX_APP_PORT_C}.
+- Tasks/scripts with `xdg-open` / `open` for dev URLs.
+
+## Remote SSH
+
+- On the **remote host**, dev listens on `127.0.0.1:${DEV_APP_PORT}` (check: `bash scripts/check-dev-browser-ports.sh`).
+- In the **Browser Tab on the client** — use the URL with the **local** dynamic port (`View → Ports → Local Address`, `.dev/forwarded-ports.env`).
+- MCP `browser_navigate`: first use the URL from `resolve-dev-browser-url.sh`; if the dynamic port fails, use `http://127.0.0.1:${DEV_APP_PORT}/` on the remote. **Do not** recommend an external browser as a workaround.
+
+## Workspace settings
+
+- `${CONTROL_PLANE_ROOT}/settings.json` and `.vscode/settings.json`: `workbench.browser.enableChatTools`, `workbench.browser.openLocalhostLinks`, `simpleBrowser.useIntegratedBrowser`, `livePreview.useIntegratedBrowser`; ports — `onAutoForward: "notify"` or `"silent"`.

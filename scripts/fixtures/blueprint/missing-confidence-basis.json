@@ -1,0 +1,10 @@
+{
+  "pair_id": "zone-2:reference-2",
+  "zone_relevance": "90%",
+  "reference_applicability": "80%",
+  "relation": "root_zone",
+  "verification_targets": ["contract"],
+  "impact_targets": ["root_hypothesis"],
+  "evidence_refs": ["CODE-2"],
+  "confidence": "85%"
+}

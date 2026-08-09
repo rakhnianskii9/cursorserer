@@ -1,0 +1,102 @@
+# Public archive ignore policy.
+# This template is materialized as .gitignore in the staged archive.
+*
+
+# Release metadata.
+!.gitignore
+!README.md
+!INSTALL-WITH-CURSOR.md
+!LICENSE
+!NOTICE
+!PUBLIC-ARCHIVE-MANIFEST.json
+!CANONICAL-PROTOCOLS.md
+!MCP-CAPABILITY-MATRIX.example.md
+!mcp.json.example
+!settings.example.json
+!hooks.example.json
+!CURSOR-UX.example.md
+!CURSOR-MODELS.example.md
+!RKX-LOOP-BLUEPRINT-FLOW.example.md
+
+# Public example roots.
+!agents/
+!agents/*.example.md
+!commands/
+!commands/*.example.md
+!hooks/
+!hooks/*.example.py
+!hooks/*_example.py
+!hooks/*.example.sh
+!hooks/*.env.example
+!rules/
+!rules/*.example.mdc
+!scripts/
+!scripts/**
+!schemas/
+!schemas/**
+!reference/
+!reference/**
+!skills/
+!skills/**/
+!skills/**/SKILL.example.md
+!skills/**/project-map.example.md
+!skills/**/recipes.example.md
+!skills/**/project-tenets.example.md
+!skills/refero-design/references/
+!skills/refero-design/references/**
+!loops/
+!loops/README.md
+!loops/_decisions/
+!loops/_decisions/**
+!loops/*.example.md
+!vendor/
+!vendor/**
+!runtime/
+!runtime/logs/
+!runtime/logs/README.md
+
+# Explicit public images.
+!assets/
+!assets/rkx-loop-flow.png
+!assets/install-flow.png
+
+# Local materialized runtime and credentials.
+/mcp.json
+/hooks.json
+/settings.json
+*.env
+*.bak-*
+*.dedup*
+**/SKILL.md
+**/*.local.mdc
+**/SKILL.local.md
+**/__pycache__/
+*.pyc
+/prompts/
+/projects/
+/plans/
+/plugins/
+/subagents/
+/sandbox-policies/
+/skills-cursor/
+
+# Private or non-English overlays.
+/reference/blueprint-index.yaml
+/reference/system-design-primer/README-ja.md
+/reference/system-design-primer/README-zh-*.md
+/reference/system-design-primer/**/README-zh-*.md
+/reference/system-design-primer/TRANSLATIONS.md
+/reference/system-design-primer/.github/
+/reference/system-design-primer/.gitignore
+/reference/system-design-primer/generate-epub.sh
+/reference/system-design-primer/resources/
+# Private project skill directories remain local-only unless their public
+# example files are explicitly re-included by the allowlist above.
+
+# Run artifacts and local captures.
+/runtime/logs/*
+!/runtime/logs/README.md
+/loops/*/manifest.md
+/loops/*/slack-notification.json
+/loops/*/state.md
+/loops/*/wave-*/

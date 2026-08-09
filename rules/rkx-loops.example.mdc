@@ -1,0 +1,73 @@
+---
+description: RKX loops always-on (Cursor)
+alwaysApply: true
+---
+
+# RKX Loops rules
+
+Ordinary code work proceeds directly. An explicit `/rkx-loop` or `/loop-bug`
+starts wave investigation and loads `rkx-loop-core`.
+
+- The Orchestrator asks for token mode: API or Cursor, then calls the Merger
+  first in bootstrap mode. The Merger creates the manifest, builds initial
+  evidence-backed hypotheses, and returns `BOOTSTRAP_WAVE_SPEC`. The default
+  first wave is LOGS + CODE + DOCS; DATA is added only for DB/API scope;
+  when a local reference registry is available, bounded `BLUEPRINT-SCOUT`
+  slots with the selected `CATALOG_ID` are added to the same parallel fan-out.
+- The group contains 1–10 narrow slots; each has exactly one hypothesis/source
+  and one expected fact. Independent slots from all wave groups are launched in
+  one parallel fan-out batch, not one at a time. The Checker checks only
+  evidence. After all slots join, the Merger saves each slot report to
+  `loops/<run>/wave-N/slots/<slot-id>/report.md`, then maintains compressed state
+  and the root graph, passes the synthesis check and canonical Root-depth gate,
+  and returns schema-v1 `NEXT_WAVE_SPEC`, `END`, or `HARD_BLOCKER`.
+- **DUAL ADVOCATE GATE:** after the post-wave Merger, route any
+  `HARD_BLOCKER` to the hard gate first. Otherwise check `root >= 96%`. Soft
+  (`>=96%`): one advisory audit; `CLEAN` → Chat summary;
+  `HOLE` → Chat summary + HOLE block (max 2 paragraphs), with no automatic next
+  wave. Hard (`<96%`): Advocate before dispatch/accept/stop; `CLEAN` continues
+  NEXT; `HOLE` → one falsifiable next-check; `HARD_BLOCKER` → one
+  `BLOCKER_RECOVERY`. Soft does not replace hard. Merger⇄Devil chat loops are
+  forbidden, as is a second Devil for the same `decision_id`; writes to
+  `loops/**` by Devil and `boss` are not part of this gate.
+- The next wave begins only after the Merger, but its independent slots are
+  launched in parallel again. With a runtime limit, only bounded concurrent
+  batches marked degraded are allowed; intentional sequential dispatch is
+  forbidden.
+- Subsequent waves close only recorded gaps. On every post-wave iteration, the
+  Merger passes the canonical Root-depth gate from `rkx-loop-core`.
+  Reference coverage dispatches only sparse `qualified_pairs` that pass
+  `zone_relevance >= 70%`, `reference_applicability >= 70%`, causal relation,
+  verifiable target, and impact target predicate. `blueprint_applicability` is
+  accepted only as a matching legacy alias. A relevant reference that does not
+  change root/plan/confidence receives `coverage_decision: OPTIONAL`.
+  Stop: soft END at root ≥96% (after soft CLEAN/HOLE), or a confirmed hard
+  `HARD_BLOCKER` after the Advocate and one bounded recovery.
+- Any confidence value, including confidence for a source/fact-slot, hypotheses,
+  the root graph, and decisions, is recorded only in the `0%`–`100%` format
+  with `CONFIDENCE_BASIS`. `high`/`medium`/`low`, decimals, and `NOT_STATED`
+  are forbidden.
+- The Root-depth gate is not replaced by an arbitrary questionnaire. An
+  unconditional `N≥3` floor and a fixed Tenets/CodeGraph sequence are not
+  required; tools are selected based on the evidence gap.
+- The final `/rkx-loop` / `/loop-*` output is **Chat summary ALWAYS** (5 parts in
+  one response): a business/UI statement, a 5-column table, technical facts, an
+  ASCII diagram, and a human-readable ✅/❌ Verdict. Part 5 must always follow
+  the binding template from `${CONTROL_PLANE_ROOT}/skills/rkx-loop-core/SKILL.md`: a causal
+  chain of arbitrary length, translation of facts into UI/business logic, and
+  the lines `**Basis:** *...*` and `**Where:** *evidence-id · exact % · factual
+  model*` according to the binding template. `loops/<run>/` is not a chat
+  substitute. Molecules 2 and 12 are mandatory (Verdict and ASCII). Without
+  all 5 parts, `chat_itog_delivered` = FAIL.
+- A terminal and significant lifecycle status from the local agent → Slack on
+  phone: the stop-hook `${CONTROL_PLANE_ROOT}/hooks/rkx-slack-notify.sh` reads only the
+  matching `loops/<run>/slack-notification.json` and sends a card of type
+  `attention` (a USER response/decision is needed) or `result` (the loop has
+  ended), with `problem_title` + user-facing meaning + blocker/next_action.
+  After the Chat summary has actually been delivered, MCP may send a separate full
+  verdict; the hook does not build a verdict from `state.md`, and the classes
+  are not duplicated. Webhook/bot secrets belong only in
+  `${HOME}/.cursor/rkx-slack-notify.env`.
+- For edits and deploys, retain the rules (`infrastructure-core` +
+  `rkx-always-on`): an explicit L2 trigger, nginx pre-copy, no destructive git,
+  no secrets in artifacts, and no Docker without the Ship gate.

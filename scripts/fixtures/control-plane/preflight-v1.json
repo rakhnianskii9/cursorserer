@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "preflight_spec_revision": "fixture-run:wave-1:abc123",
+  "orchestrator_resolution": "DISPATCH_READY",
+  "slots": [
+    {
+      "slot_id": "CODE-1",
+      "status": "READY",
+      "reason": null,
+      "source_tool_mcp_availability": "ReadFile available",
+      "authenticated_context": "not_required",
+      "read_only_scope": "fixture",
+      "correlation_refs": null,
+      "revision_compatibility": "compatible"
+    }
+  ]
+}

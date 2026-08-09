@@ -1,0 +1,9 @@
+{
+  "notification_max_age_seconds": 0,
+  "dedup_ttl_seconds": 1800,
+  "pending_lease_seconds": 120,
+  "log_root": "runtime/logs",
+  "secret_env_names": [
+    "SLACK_WEBHOOK_URL"
+  ]
+}

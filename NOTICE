@@ -1,0 +1,12 @@
+# Notices
+
+The MIT license in this repository applies only to original control-plane
+files unless a file states otherwise.
+
+The `reference/` directory contains third-party or externally sourced
+reference material. Keep each vendored license and attribution file with its
+source material. Do not treat reference material as project coding policy.
+
+Generated or runtime-provided Cursor files are not required for installation.
+They are intentionally kept outside the public example surface unless
+explicitly listed by the public manifest.

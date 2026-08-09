@@ -1,0 +1,68 @@
+---
+description: Global context, evidence, and token economy for Cursor agents
+alwaysApply: true
+---
+# Context and evidence economy
+
+Apply to ordinary work and RKX work. This policy chooses the smallest useful
+context; it never makes a loop or an MCP call mandatory.
+
+## Capability boundary
+
+MCP servers are runtime-shared capabilities. Agent contracts constrain a role to its
+bounded scope; a SKILL.md supplies trigger and procedure but does not grant tools.
+
+## Compact handoff
+
+Every delegation or follow-up carries only: task, bounded scope, artifact
+references, delta since the prior pass, one open evidence gap, allowed tools,
+expected output, and a stop condition. Reuse loops artifacts instead of pasting
+raw chat transcripts, full logs, or unchanged code again.
+
+Independent delegations in the same wave are issued as one concurrent batch;
+dependent follow-ups wait for the recorded join/barrier. Do not spend turns
+launching equivalent sibling slots one at a time. Merger-to-orchestrator wave
+handoffs use the compact `BOOTSTRAP_WAVE_SPEC` / `NEXT_WAVE_SPEC` contract;
+each returned slot packet is persisted at
+`loops/<run>/wave-N/slots/<slot-id>/report.md`. Every confidence value in the
+packet and artifact is mandatory `0%`–`100%` with a cited
+`CONFIDENCE_BASIS`; qualitative or decimal forms are invalid.
+
+## Evidence routing
+
+- Known file or local question: focused Read/search.
+- Unknown or broad code scope after direct inspection: Tenets with a narrow
+  path and fast mode.
+- Structural, caller, trace, or impact gap: CodeGraph or Octocode; add the
+  second only if the first leaves a concrete precision gap.
+- Schema or data evidence: read-only Postgres.
+- Large chat/slot bundles, competing hypotheses, or decision synthesis: Crash.
+- Durable investigation memory: loops/<run> artifacts and the living plan.
+  No Memory MCP is configured in this runtime. If one is added later, store and
+  retrieve only stable decisions plus artifact references; never treat it as
+  primary evidence.
+
+## Economy and trust
+
+- State each durable instruction once in its owning rule or skill; do not
+  duplicate generic process rules across the control plane.
+- Prefer references and deltas over repeated raw context.
+- Request the smallest structured output that answers the current question.
+- Use direct tool calls when one small result can determine the next action.
+  Reserve scripted aggregation, filtering, or parallel tool orchestration for
+  a bounded stage with many independent, homogeneous results.
+- Keep exact tool parameters, retry limits, and output schemas in the skill
+  that owns that workflow. Do not make unrelated tools mandatory for an
+  ordinary task.
+- A graph index, Crash result, or future Memory result is navigation or
+  analysis; code, logs, database results, and cited documents remain evidence.
+- Reference retrieval starts with the registry
+  `${CONTROL_PLANE_ROOT}/reference/blueprint-index.yaml`, then reads only the selected local
+  catalog index and its exact pinned source refs. Scout returns at most three
+  candidates per bounded hypothesis/zone/catalog; it must not dump a full
+  catalog or fetch external sources.
+- Blueprint coverage dispatches only Merger-qualified `qualified_pairs`, with a
+  declared `coverage_budget`. Budget overflow requires explicit triage or
+  marked degraded batching; it must never silently drop pairs.
+- Start another tool call only for a named remaining gap. Stop when no new fact
+  can change the decision, scope, or next action.

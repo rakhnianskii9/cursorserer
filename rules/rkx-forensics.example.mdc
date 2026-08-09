@@ -1,0 +1,39 @@
+---
+description: RKX forensics MCP stack for /loop-* digs (Cursor)
+alwaysApply: false
+---
+
+# RKX forensics MCP
+
+## Lightweight forensic routing
+
+Use this rule only when the USER explicitly requests forensic work, trace,
+caller/impact analysis, `/rkx-loop`, or `/loop-bug`.
+
+1. For an explicit wave, use the manifest and first-wave composition in
+   `rkx-loop-core`; for other forensic work, start with the smallest useful
+   targeted inspection.
+2. Add logs, database evidence, docs, Tenets, CodeGraph, Octocode, or slots
+   only for a named evidence gap.
+3. Tenets is only for an unknown scope after direct inspection. Use CodeGraph
+   or Octocode for a structural gap; add the other only if that gap remains.
+4. Use Crash for competing hypotheses, large evidence synthesis, or a bounded
+   review decision. Its output is analysis, never uncited evidence.
+5. Durable run memory is `loops/<run>/**` and the living plan. No Memory MCP is
+   configured; do not invent one or use raw chat dumps as memory.
+6. Wave continuation is delta-driven. Every post-wave decision checks
+   `root confidence` FIRST, then uses the **DUAL ADVOCATE GATE** from
+   `rkx-loop-core`: soft when `>=96%` (advisory HOLE block, no auto-next);
+   hard when `<96%` (gate continues / recovery). Soft does not replace hard.
+Final user delivery is **Chat summary ALWAYS** (5 parts) from `rkx-loop-core`;
+   run artifacts are not a chat substitute.
+
+Postgres remains read-only.
+
+## Skills
+
+`rkx-tenets`, `rkx-codegraph`, `octocode-code-forensics`, `rkx-mcp-utilities`, `rkx-loop-core`.
+
+## Degradation
+
+Mark `[DEGRADED: <mcp>]` and continue with fallback from core matrix.

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "conversation_id": "fixture-conversation",
+  "event_id": "fixture-event-invalid-url",
+  "run_id": "fixture-run",
+  "wave": "wave-1",
+  "kind": "waiting_user",
+  "notification_type": "attention",
+  "problem_title": "Unavailable verdict link",
+  "summary": "This fixture must be rejected because a URL is present while the verdict is unavailable.",
+  "full_verdict_available": false,
+  "full_verdict_url": "https://example.invalid/verdict"
+}

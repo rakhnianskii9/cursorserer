@@ -1,0 +1,58 @@
+{
+    // Copy this JSONC example to ${HOME}/.cursor/settings.json and adapt it locally.
+    // Personal credentials, project paths, auto-approval, and MCP sampling
+    // settings are intentionally excluded from the public example.
+    "git.ignoreLimitWarning": true,
+    "scm.showInputActionButton": false,
+    "security.workspace.trust.enabled": true,
+    "security.workspace.trust.startupPrompt": true,
+    "security.workspace.trust.untrustedFiles": "newWindow",
+    "chat.mcp.autostart": "newAndOutdated",
+    "chat.useAgentSkills": true,
+    "chat.agentSkillsLocations": {
+        ".github/skills": false,
+        "${CONTROL_PLANE_ROOT}/skills": true,
+        ".agents/skills": false
+    },
+    "chat.promptFilesLocations": {
+        ".github/prompts": false,
+        "${CONTROL_PLANE_ROOT}/prompts": false
+    },
+    "chat.agentFilesLocations": {
+        ".github/agents": false,
+        "${CONTROL_PLANE_ROOT}/agents": true
+    },
+    "chat.instructionsFilesLocations": {
+        ".github/instructions": false
+    },
+    "workbench.browser.enableChatTools": true,
+    "workbench.browser.openLocalhostLinks": true,
+    "workbench.browser.showInTitleBar": true,
+    "workbench.browser.dataStorage": "workspace",
+    "simpleBrowser.useIntegratedBrowser": true,
+    "livePreview.useIntegratedBrowser": true,
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/.turbo": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/coverage": true,
+        "**/tmp": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/.turbo": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/coverage": true,
+        "**/tmp": true
+    },
+    "files.watcherExclude": {
+        "**/node_modules/**": true,
+        "**/.turbo/**": true,
+        "**/dist/**": true,
+        "**/build/**": true,
+        "**/coverage/**": true,
+        "**/tmp/**": true
+    }
+}

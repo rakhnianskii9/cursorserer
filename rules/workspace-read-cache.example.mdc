@@ -1,0 +1,29 @@
+---
+description: Workspace read-model cache (Redis + client stale window)
+alwaysApply: true
+---
+# Workspace Read-Model Cache (NORMATIVE)
+
+Do **not** rebuild heavy **workspace-scoped** lists or tables on every
+mount/focus. Cache the read model and invalidate it after writes.
+
+## Contract
+
+| Layer | Rule |
+|------|---------|
+| **Server** | `WorkspaceReadCacheService` (`src/services/workspace-read-cache.service.ts`), key `{prefix}{workspaceId}:…`, TTL via `*_CACHE_TTL_SEC` (default 90 s), payload via `toJsonSafePayload` |
+| **Read** | Without `?refresh=true`, check Redis first; on a miss, perform the full calculation and `set` the result |
+| **Write** | After mutations, invalidate the affected workspace with `del(workspaceId)`; webhooks and sync jobs invalidate affected workspaces |
+| **Client** | stale window **60 s** (`WORKSPACE_READ_QUERY_STALE_MS` / `READ_MODEL_QUERY_STALE_MS`); do not use `refetchOnMount: 'always'` or `_ts` cache-busters |
+| **Explicit refresh** | `?refresh=true` or an explicit `force: true` after a user action |
+
+## Prohibited
+
+- `staleTime: 0` + `refetchOnMount: 'always'` on heavy feeds without justification
+- Cache-bust `_ts=Date.now()` on stable list APIs
+- Polling intervals below 60 s without approval
+
+## Repository references
+
+- Workspace list cache service and read-query module
+- Mutation handlers, webhooks, and sync jobs that invalidate the workspace
