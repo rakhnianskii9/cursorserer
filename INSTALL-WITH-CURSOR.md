@@ -85,43 +85,43 @@ archive revision, selected capabilities, source/target paths, backup paths,
 placeholder substitutions, validation results, and explicit skipped
 capabilities. Do not include secret values.
 
-## Phase 3: materialize confirmed examples
+## Phase 3: copy confirmed archive files
 
-For each confirmed mapping, copy the example to the canonical target. Keep the
-example file unchanged.
+This archive already uses canonical filenames. For each confirmed mapping, copy
+the archive file into `CONTROL_PLANE_ROOT` as-is (no suffix stripping).
 
-| Public example | Canonical runtime target |
+| Archive path | Runtime target |
 |---|---|
-| `agents/*.example.md` | `agents/*.md` |
-| `commands/*.example.md` | `commands/*.md` |
-| `rules/*.example.mdc` | `rules/*.mdc` |
-| `skills/**/SKILL.example.md` | `skills/**/SKILL.md` |
-| `skills/**/project-map.example.md` | `skills/**/project-map.md` |
-| `skills/**/recipes.example.md` | `skills/**/recipes.md` |
-| `skills/**/project-tenets.example.md` | `skills/**/project-tenets.md` |
-| `hooks/*_example.py` | `hooks/*.py` |
-| `hooks/*.example.sh` | `hooks/*.sh` |
-| `scripts/resolve-dev-browser-url.example.sh` | `scripts/resolve-dev-browser-url.sh` |
-| `scripts/check-dev-browser-ports.example.sh` | `scripts/check-dev-browser-ports.sh` |
-| `hooks/rkx-slack-notify.env.example` | `${HOME}/.cursor/rkx-slack-notify.env` only after explicit Slack opt-in |
-| `hooks.example.json` | `hooks.json` after path substitution |
-| `CURSOR-UX.example.md` | `CURSOR-UX.md` |
-| `CURSOR-MODELS.example.md` | `CURSOR-MODELS.md` |
-| `RKX-LOOP-BLUEPRINT-FLOW.example.md` | `RKX-LOOP-BLUEPRINT-FLOW.md` |
-| `reference/blueprint-index.example.yaml` | `reference/blueprint-index.yaml` |
+| `agents/*.md` | `agents/*.md` |
+| `commands/*.md` | `commands/*.md` |
+| `rules/*.mdc` | `rules/*.mdc` |
+| `skills/**/SKILL.md` | `skills/**/SKILL.md` |
+| `skills/**/project-map.md` | `skills/**/project-map.md` |
+| `skills/**/recipes.md` | `skills/**/recipes.md` |
+| `skills/**/project-tenets.md` | `skills/**/project-tenets.md` |
+| `hooks/*.py` | `hooks/*.py` |
+| `hooks/*.sh` | `hooks/*.sh` |
+| `scripts/resolve-dev-browser-url.sh` | `scripts/resolve-dev-browser-url.sh` |
+| `scripts/check-dev-browser-ports.sh` | `scripts/check-dev-browser-ports.sh` |
+| `hooks/rkx-slack-notify.env` | `${HOME}/.cursor/rkx-slack-notify.env` only after explicit Slack opt-in |
+| `hooks.json` | `hooks.json` after path substitution |
+| `CURSOR-UX.md` | `CURSOR-UX.md` |
+| `CURSOR-MODELS.md` | `CURSOR-MODELS.md` |
+| `RKX-LOOP-BLUEPRINT-FLOW.md` | `RKX-LOOP-BLUEPRINT-FLOW.md` |
+| `reference/blueprint-index.yaml` | `reference/blueprint-index.yaml` |
 | `reference/system-design-primer/**` (English bundle) | same path, including `LICENSE.txt` |
-| `settings.example.json` | `settings.json` only after explicit settings approval |
+| `settings.json` | `settings.json` only after explicit settings approval |
 
 The hook registration must replace `__CONTROL_PLANE_ROOT__` with the resolved
 absolute path of this archive. Hook implementations must remain real files,
 not symlinks. `rkx_write_easy_summary.py` and `rkx_lifecycle_common.py` must
-be materialized together in the same `hooks/` directory.
+be copied together into the same `hooks/` directory.
 
 ## Phase 4: configure optional capabilities
 
 ### MCP
 
-Read `mcp.json.example` as a capability template, not as a ready-to-run
+Read `mcp.json` as a capability template, not as a ready-to-run
 configuration. Build a local `mcp.json` only from capabilities confirmed in
 preflight:
 

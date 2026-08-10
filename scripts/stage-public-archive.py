@@ -12,7 +12,7 @@ from pathlib import Path, PurePosixPath
 
 
 MANIFEST_NAME = "PUBLIC-ARCHIVE-MANIFEST.json"
-TEMPLATE_NAME = ".gitignore.example"
+TEMPLATE_NAME = ".gitignore"
 
 FALLBACK_GITIGNORE = """\
 # Generated public archive ignore policy.
@@ -24,24 +24,23 @@ FALLBACK_GITIGNORE = """\
 !NOTICE
 !PUBLIC-ARCHIVE-MANIFEST.json
 !CANONICAL-PROTOCOLS.md
-!MCP-CAPABILITY-MATRIX.example.md
-!mcp.json.example
-!settings.example.json
-!hooks.example.json
-!CURSOR-UX.example.md
-!CURSOR-MODELS.example.md
-!RKX-LOOP-BLUEPRINT-FLOW.example.md
+!MCP-CAPABILITY-MATRIX.md
+!mcp.json
+!settings.json
+!hooks.json
+!CURSOR-UX.md
+!CURSOR-MODELS.md
+!RKX-LOOP-BLUEPRINT-FLOW.md
 !agents/
-!agents/*.example.md
+!agents/*.md
 !commands/
-!commands/*.example.md
+!commands/*.md
 !hooks/
-!hooks/*.example.py
-!hooks/*_example.py
-!hooks/*.example.sh
-!hooks/*.env.example
+!hooks/*.py
+!hooks/*.sh
+!hooks/rkx-slack-notify.env
 !rules/
-!rules/*.example.mdc
+!rules/*.mdc
 !scripts/
 !scripts/**
 !schemas/
@@ -50,26 +49,22 @@ FALLBACK_GITIGNORE = """\
 !reference/**
 !skills/
 !skills/**/
-!skills/**/SKILL.example.md
-!skills/**/project-map.example.md
-!skills/**/recipes.example.md
-!skills/**/project-tenets.example.md
-!skills/refero-design/references/
-!skills/refero-design/references/**
+!skills/**/SKILL.md
+!skills/**/project-map.md
+!skills/**/recipes.md
+!skills/**/project-tenets.md
+!skills/**/reference.md
 !loops/
 !loops/README.md
 !loops/_decisions/
 !loops/_decisions/**
-!loops/*.example.md
-!vendor/
-!vendor/**
+!loops/*.md
 !runtime/
 !runtime/logs/
 !runtime/logs/README.md
 !assets/
 !assets/rkx-loop-flow.png
 !assets/install-flow.png
-/reference/blueprint-index.yaml
 /reference/system-design-primer/README-ja.md
 /reference/system-design-primer/README-zh-*.md
 /reference/system-design-primer/**/README-zh-*.md
@@ -177,11 +172,7 @@ def copy_public_files(source_root: Path, output_root: Path, manifest: dict) -> i
     for source in candidates:
         relative = source.relative_to(source_root)
         key = relative_key(relative)
-        if key == ".gitignore" or not public_path(key, manifest):
-            continue
-        if source.is_symlink():
-            raise SystemExit(f"Public archive cannot contain a symlink: {key}")
-        if not source.is_file():
+        if source.is_dir() or not public_path(key, manifest):
             continue
         target = output_root / relative
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -191,33 +182,21 @@ def copy_public_files(source_root: Path, output_root: Path, manifest: dict) -> i
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--out",
-        required=True,
-        type=Path,
-        help="new output directory; it must not already exist",
-    )
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source", type=Path, default=Path(__file__).resolve().parents[1])
+    parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-
-    source_root = Path(__file__).resolve().parents[1]
-    output_root = args.out.expanduser().resolve()
+    source_root = args.source.expanduser().resolve()
+    output_root = args.output.expanduser().resolve()
     if output_root.exists():
-        raise SystemExit(f"Output directory already exists: {output_root}")
-    if output_root == source_root or source_root in output_root.parents:
-        raise SystemExit("Output directory must not be inside the source workspace")
-
-    manifest = load_manifest(source_root)
+        shutil.rmtree(output_root)
     output_root.mkdir(parents=True)
-    copied = copy_public_files(source_root, output_root, manifest)
+    manifest = load_manifest(source_root)
     write_public_gitignore(source_root, output_root)
-
-    print(f"Staged {copied + 1} public files at {output_root}")
+    copied = copy_public_files(source_root, output_root, manifest)
+    print(f"Staged {copied} public files into {output_root}")
     return 0
 
 
 if __name__ == "__main__":
-    try:
-        raise SystemExit(main())
-    except BrokenPipeError:
-        sys.exit(1)
+    raise SystemExit(main())

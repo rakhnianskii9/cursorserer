@@ -9,9 +9,9 @@ workspace. The stop hook must read only the matching run-scoped artifact.
 
 ## Templates
 
-- `_models.example.md` — optional runtime model registry.
-- `_registry.example.md` — loop and capability registry.
-- `RUN.example.md` — run metadata template.
+- `_models.md` — optional runtime model registry.
+- `_registry.md` — loop and capability registry.
+- `RUN.md` — run metadata template.
 - `_decisions/README.md` — decision/ADR boundary.
 
 The public archive does not claim that a model, MCP server, browser, database,

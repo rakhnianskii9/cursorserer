@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cursor-control-plane/schemas/wave-spec-v1.json",
+  "title": "RKX Wave Specification v1",
+  "type": "object",
+  "additionalProperties": true,
+  "allOf": [
+    {
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "decision_kind"
+            ]
+          },
+          {
+            "required": [
+              "status"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "if": {"properties": {"token_mode": {"const": "API"}}},
+      "then": {"properties": {"billing_credential_scope": {"const": "API_CREDENTIALS"}}}
+    },
+    {
+      "if": {"properties": {"token_mode": {"const": "CURSOR"}}},
+      "then": {"properties": {"billing_credential_scope": {"const": "CURSOR_SUBSCRIPTION"}}}
+    },
+    {
+      "if": {"properties": {"token_mode": {"const": "CODEX"}}},
+      "then": {"properties": {"billing_credential_scope": {"const": "CODEX_SUBSCRIPTION"}}}
+    }
+  ],
+  "required": [
+    "schema_version",
+    "kind",
+    "run_id",
+    "wave_id",
+    "token_mode",
+    "billing_credential_scope",
+    "spec_revision",
+    "confidence",
+    "confidence_basis",
+    "hypotheses",
+    "slots",
+    "dispatch",
+    "stop_condition"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "enum": [
+        "BOOTSTRAP_WAVE_SPEC",
+        "NEXT_WAVE_SPEC",
+        "WAVE_DECISION"
+      ]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "wave_id": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "token_mode": {
+      "enum": [
+        "API",
+        "CURSOR",
+        "CODEX"
+      ]
+    },
+    "billing_credential_scope": {
+      "enum": [
+        "API_CREDENTIALS",
+        "CURSOR_SUBSCRIPTION",
+        "CODEX_SUBSCRIPTION"
+      ]
+    },
+    "spec_revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "decision": {
+      "enum": [
+        "NEXT_WAVE_SPEC",
+        "END",
+        "HARD_BLOCKER",
+        "BLOCKER_RECOVERY",
+        "SINGLE_NEXT_CHECK",
+        null
+      ]
+    },
+    "confidence": {
+      "type": "string",
+      "pattern": "^(100|[1-9]?\\d)%$"
+    },
+    "confidence_basis": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hypotheses": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "hypothesis_id",
+          "statement",
+          "state",
+          "confidence",
+          "confidence_basis"
+        ],
+        "properties": {
+          "hypothesis_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 1
+          },
+          "state": {
+            "enum": [
+              "CANDIDATE",
+              "SUPPORTED",
+              "WEAKENED",
+              "REJECTED"
+            ]
+          },
+          "confidence": {
+            "type": "string",
+            "pattern": "^(100|[1-9]?\\d)%$"
+          },
+          "confidence_basis": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "slots": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "slot_id",
+          "hypothesis_id",
+          "source",
+          "expected_fact",
+          "expected_decision_change",
+          "requirement",
+          "correlation_refs",
+          "searchability"
+        ],
+        "properties": {
+          "slot_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "hypothesis_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected_fact": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected_decision_change": {
+            "type": "string",
+            "minLength": 1
+          },
+          "requirement": {
+            "enum": [
+              "REQUIRED",
+              "OPTIONAL"
+            ]
+          },
+          "correlation_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "searchability": {
+            "enum": [
+              "KNOWN",
+              "UNKNOWN",
+              "NOT_APPLICABLE"
+            ]
+          }
+        }
+      }
+    },
+    "dispatch": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "mode",
+        "join",
+        "coverage_budget"
+      ],
+      "properties": {
+        "mode": {
+          "const": "PARALLEL"
+        },
+        "join": {
+          "const": "MERGER"
+        },
+        "coverage_budget": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "stop_condition": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

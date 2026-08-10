@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cursor-control-plane/schemas/install-manifest-v1.json",
+  "title": "Portable Cursor Install Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "archive_revision",
+    "installed_at",
+    "control_plane_root",
+    "capabilities",
+    "materialized",
+    "skipped",
+    "validation"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "archive_revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "installed_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "control_plane_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": [
+          "enabled",
+          "disabled",
+          "unavailable",
+          "skipped",
+          "unverified"
+        ]
+      }
+    },
+    "materialized": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "target",
+          "action"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "enum": [
+              "copied",
+              "merged",
+              "unchanged"
+            ]
+          },
+          "backup": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "skipped": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "archive",
+        "runtime"
+      ],
+      "properties": {
+        "archive": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_run"
+          ]
+        },
+        "runtime": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_run"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -5,16 +5,8 @@
   "install_root": "current_directory",
   "materialization": {
     "interactive": true,
-    "source_suffixes": [
-      ".example.md",
-      ".example.mdc",
-      ".example.py",
-      "_example.py",
-      ".example.sh",
-      ".example.json",
-      ".example.yaml"
-    ],
-    "canonical_files_are_local_only": true,
+    "mode": "copy_as_is",
+    "canonical_files_are_local_only": false,
     "overwrite_requires_confirmation": true,
     "backup_before_write": true
   },
@@ -26,13 +18,13 @@
     "NOTICE",
     "PUBLIC-ARCHIVE-MANIFEST.json",
     "CANONICAL-PROTOCOLS.md",
-    "MCP-CAPABILITY-MATRIX.example.md",
-    "mcp.json.example",
-    "settings.example.json",
-    "hooks.example.json",
-    "CURSOR-UX.example.md",
-    "CURSOR-MODELS.example.md",
-    "RKX-LOOP-BLUEPRINT-FLOW.example.md"
+    "MCP-CAPABILITY-MATRIX.md",
+    "mcp.json",
+    "settings.json",
+    "hooks.json",
+    "CURSOR-UX.md",
+    "CURSOR-MODELS.md",
+    "RKX-LOOP-BLUEPRINT-FLOW.md"
   ],
   "public_example_roots": [
     "agents",
@@ -44,29 +36,26 @@
     "reference",
     "skills",
     "loops",
-    "vendor",
     "runtime/logs"
   ],
   "public_file_patterns": [
-    "agents/*.example.md",
-    "commands/*.example.md",
-    "hooks/*.example.py",
-    "hooks/*_example.py",
-    "hooks/*.example.sh",
-    "hooks/*.env.example",
-    "rules/*.example.mdc",
+    "agents/*.md",
+    "commands/*.md",
+    "hooks/*.py",
+    "hooks/*.sh",
+    "hooks/rkx-slack-notify.env",
+    "rules/*.mdc",
     "scripts/**",
     "schemas/**",
     "reference/**",
-    "skills/**/SKILL.example.md",
-    "skills/**/project-map.example.md",
-    "skills/**/recipes.example.md",
-    "skills/**/project-tenets.example.md",
-    "skills/refero-design/references/*.md",
+    "skills/**/SKILL.md",
+    "skills/**/project-map.md",
+    "skills/**/recipes.md",
+    "skills/**/project-tenets.md",
+    "skills/**/reference.md",
     "loops/README.md",
     "loops/_decisions/**",
-    "loops/*.example.md",
-    "vendor/**",
+    "loops/*.md",
     "runtime/logs/README.md"
   ],
   "public_skill_ids": [
@@ -76,9 +65,6 @@
     "meta-developer-tools",
     "octocode-code-forensics",
     "orchestration-qa",
-    "playwright-ui-evidence",
-    "pr-review-toolkit",
-    "refero-design",
     "rkx-loop-bug",
     "rkx-loop-core",
     "rkx-loop-design",
@@ -88,8 +74,6 @@
     "rkx-loop-implement",
     "rkx-loop-plan",
     "rkx-loop-validate",
-    "security-guidance",
-    "web-artifacts-builder",
     "rkx-codegraph",
     "rkx-mcp-utilities",
     "rkx-tenets"
@@ -108,8 +92,6 @@
     "skills-cursor"
   ],
   "excluded_path_patterns": [
-    ".gitignore.example",
-    "reference/blueprint-index.yaml",
     "reference/system-design-primer/README-ja.md",
     "reference/system-design-primer/README-zh-*.md",
     "reference/system-design-primer/**/README-zh-*.md",
@@ -149,10 +131,10 @@
     "LICENSE",
     "NOTICE",
     "PUBLIC-ARCHIVE-MANIFEST.json",
-    "hooks.example.json",
-    "hooks/rkx_lifecycle_common_example.py",
-    "hooks/rkx_slack_notify_example.py",
-    "hooks/rkx_write_easy_summary_example.py",
+    "hooks.json",
+    "hooks/rkx_lifecycle_common.py",
+    "hooks/rkx_slack_notify.py",
+    "hooks/rkx_write_easy_summary.py",
     "scripts/validate-public-control-plane.py",
     "scripts/stage-public-archive.py",
     "schemas/wave-spec-v1.json",
@@ -161,7 +143,7 @@
     "schemas/runtime-inputs-v1.json",
     "assets/rkx-loop-flow.png",
     "assets/install-flow.png",
-    "rules/workspace-read-cache.example.mdc",
+    "rules/workspace-read-cache.mdc",
     "reference/system-design-primer/README.md",
     "reference/system-design-primer/LICENSE.txt",
     "reference/system-design-primer/.upstream-commit"
@@ -195,7 +177,7 @@
     "personal paths",
     "legacy orchestration",
     "legacy third-party transport instructions",
-    "customer or product-specific integrations",
+    "unpublished customer-specific integrations outside public_skill_ids",
     "non-English vendor translations"
   ],
   "required_public_checks": [
@@ -206,7 +188,8 @@
     "no mutable latest package tags",
     "no sample filenames in the control-plane surface",
     "all public example references resolve",
-    "exact binary allowlist and recorded hashes"
+    "exact binary allowlist and recorded hashes",
+    "named public provider skills remain English and portable"
   ],
   "optional_capability_policy": {
     "default": "disabled",

@@ -149,8 +149,8 @@ def validate_wave_spec() -> None:
 
 def main() -> int:
     read_json(ROOT / "hooks.json")
-    read_json(ROOT / "hooks.example.json")
-    read_json(ROOT / "mcp.json.example")
+    read_json(ROOT / "hooks.json")
+    read_json(ROOT / "mcp.json")
     require_text(
         ROOT / "skills/rkx-loop-core/SKILL.md",
         "schema_version: 1",

@@ -283,7 +283,7 @@ def validate_yaml(paths: Iterable[Path], errors: list[str]) -> None:
 
 def validate_frontmatter(paths: Iterable[Path], errors: list[str]) -> None:
     for relative in paths:
-        if not relative.name.endswith("SKILL.example.md"):
+        if not relative.name.endswith("SKILL.md"):
             continue
         try:
             text = read_text(ROOT / relative)
@@ -308,7 +308,7 @@ def validate_surface_links(paths: Iterable[Path], errors: list[str]) -> None:
     load_pattern = re.compile(r"Load `([^`]+)`")
     for relative in paths:
         if not relative.as_posix().startswith("commands/") or not relative.name.endswith(
-            ".example.md"
+            ".md"
         ):
             continue
         try:
@@ -316,13 +316,13 @@ def validate_surface_links(paths: Iterable[Path], errors: list[str]) -> None:
         except (OSError, UnicodeError):
             continue
         for skill_name in load_pattern.findall(text):
-            candidate = f"skills/{skill_name}/SKILL.example.md"
+            candidate = f"skills/{skill_name}/SKILL.md"
             if candidate not in path_set:
                 fail(errors, f"{relative} loads missing public skill example: {skill_name}")
 
     for relative in paths:
         if not relative.as_posix().startswith("agents/") or not relative.name.endswith(
-            ".example.md"
+            ".md"
         ):
             continue
         try:
@@ -582,7 +582,7 @@ def validate_archive(
     for path in sorted(required - {item.as_posix() for item in public}):
         fail(errors, f"required public file is missing: {path}")
 
-    summary = ROOT / "hooks/rkx_write_easy_summary_example.py"
+    summary = ROOT / "hooks/rkx_write_easy_summary.py"
     if summary.is_file():
         result = subprocess.run(
             [sys.executable, "-B", str(summary)],
@@ -604,7 +604,7 @@ def validate_archive(
         except OSError as error:
             fail(errors, f"hook test temporary directory is unavailable: {error}")
     test_result = subprocess.run(
-        [sys.executable, "-m", "unittest", "discover", "-s", "hooks", "-p", "*_example.py"],
+        [sys.executable, "-m", "unittest", "discover", "-s", "hooks", "-p", "test_*.py"],
         cwd=ROOT,
         env=test_env,
         stdout=subprocess.PIPE,

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cursor-control-plane/schemas/runtime-inputs-v1.json",
+  "title": "Portable Cursor Runtime Inputs v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "notification_max_age_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 604800
+    },
+    "dedup_ttl_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 604800
+    },
+    "pending_lease_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600
+    },
+    "log_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "secret_env_names": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9_]*$"
+      }
+    }
+  }
+}

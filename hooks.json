@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [
+      {
+        "command": "bash __CONTROL_PLANE_ROOT__/hooks/rkx-slack-notify-on-write.sh"
+      }
+    ],
+    "stop": [
+      {
+        "command": "bash __CONTROL_PLANE_ROOT__/hooks/rkx-slack-notify.sh"
+      },
+      {
+        "command": "python3 __CONTROL_PLANE_ROOT__/hooks/rkx_write_easy_summary.py"
+      }
+    ]
+  }
+}

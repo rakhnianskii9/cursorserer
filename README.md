@@ -185,17 +185,16 @@ Design → Implementation → Validation / deploy gates → Reference coverage
 
 | Area | Public Form | Why It Exists |
 | :--- | :--- | :--- |
-| **Agents** | `agents/*.example.md` | Role contracts and responsibility boundaries |
-| **Commands** | `commands/*.example.md` | Slash entry points for launching blueprints |
-| **Rules** | `rules/*.example.mdc` | Workflow, loops, forensics, browser, and token policy |
-| **Skills** | `skills/**/SKILL.example.md` | Phase and specialized workflows |
-| **Hooks** | `hooks/*_example.py`, `*.example.sh` | Lifecycle escalation and human-readable summary |
+| **Agents** | `agents/*.md` | Role contracts and responsibility boundaries |
+| **Commands** | `commands/*.md` | Slash entry points for launching blueprints |
+| **Rules** | `rules/*.mdc` | Workflow, loops, forensics, browser, and token policy |
+| **Skills** | `skills/**/SKILL.md` | Phase and specialized workflows |
+| **Hooks** | `hooks/*.py`, `*.sh` | Lifecycle escalation and human-readable summary |
 | **Schemas** | `schemas/*.json` | Machine-readable protocol contracts |
 | **Fixtures** | `scripts/fixtures/` | Verification scenarios |
 | **Validators** | `scripts/` | Offline archive and runtime checks |
 | **Reference** | `reference/` | Blueprint registry and telephony catalog |
 | **Loops** | `loops/` | Run templates and decision surfaces |
-| **Vendor** | `vendor/generated/` | Optional Canvas declarations |
 
 ### 🤖 Agent Crew
 

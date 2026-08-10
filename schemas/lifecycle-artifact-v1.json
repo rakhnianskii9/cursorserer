@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cursor-control-plane/schemas/lifecycle-artifact-v1.json",
+  "title": "RKX Lifecycle Artifact v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "conversation_id",
+    "event_id",
+    "run_id",
+    "wave",
+    "kind",
+    "notification_type",
+    "problem_title",
+    "summary",
+    "full_verdict_available"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "conversation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "wave": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "enum": [
+        "started",
+        "progress",
+        "waiting_user",
+        "blocked",
+        "completed",
+        "failed",
+        "wave_cap"
+      ]
+    },
+    "notification_type": {
+      "enum": [
+        "attention",
+        "result"
+      ]
+    },
+    "problem_title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "capture_dir": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._/-]+$",
+      "maxLength": 255
+    },
+    "blocker": {
+      "type": "string",
+      "maxLength": 1200
+    },
+    "next_action": {
+      "type": "string",
+      "maxLength": 1200
+    },
+    "full_verdict_available": {
+      "type": "boolean"
+    },
+    "full_verdict_url": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https?://[^\\s]+$"
+    },
+    "decision_artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        }
+      }
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "full_verdict_available": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "full_verdict_url"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "full_verdict_available": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "required": [
+            "full_verdict_url"
+          ]
+        }
+      }
+    }
+  ]
+}
