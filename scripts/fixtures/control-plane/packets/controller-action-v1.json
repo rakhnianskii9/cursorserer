@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "action_id": "action-1",
+  "run_id": "fixture-run",
+  "phase_id": "phase-1",
+  "wave_id": 1,
+  "spec_revision": "fixture-run:wave-1:abc",
+  "correlation_id": "corr-1",
+  "parent_artifact_id": "spec:fixture-run:wave-1:abc",
+  "expected_state_revision": 1,
+  "action": "DISPATCH_WAVE",
+  "slot_id": null,
+  "attempt_id": null
+}

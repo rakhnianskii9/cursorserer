@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rkx-controller-action-v1",
+  "title": "RKX ControllerAction v1",
+  "description": "Mechanical next runtime action. Not an AcceptedDecision. action_id is the idempotency key: Orchestrator executes each id at most once; Merger resume reissues the same id until last_applied_action_id matches.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "action_id", "run_id", "phase_id", "correlation_id",
+    "parent_artifact_id", "expected_state_revision", "action"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "action_id": {"type": "string", "minLength": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "phase_id": {"type": "string", "minLength": 1},
+    "wave_id": {"type": ["integer", "null"], "minimum": 0, "maximum": 20},
+    "spec_revision": {"type": ["string", "null"], "minLength": 1},
+    "correlation_id": {"type": "string", "minLength": 1},
+    "parent_artifact_id": {"type": "string", "minLength": 1},
+    "expected_state_revision": {"type": "integer", "minimum": 1},
+    "action": {
+      "enum": [
+        "PREFLIGHT",
+        "DISPATCH_WAVE",
+        "REDISPATCH_SLOT",
+        "JOIN",
+        "CALL_ADVOCATE",
+        "CALL_BOSS",
+        "CALL_IMPLEMENTER",
+        "VALIDATE_IMPLEMENTATION",
+        "DELIVER",
+        "ASK_USER",
+        "EXPLAIN_INVALID_RESUME",
+        "BLOCKER_RECOVERY"
+      ]
+    },
+    "slot_id": {"type": ["string", "null"], "minLength": 1},
+    "attempt_id": {"type": ["integer", "null"], "minimum": 1, "maximum": 5}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"action": {"const": "REDISPATCH_SLOT"}}, "required": ["action"]},
+      "then": {
+        "required": ["slot_id", "attempt_id", "wave_id", "spec_revision"],
+        "properties": {
+          "slot_id": {"type": "string", "minLength": 1},
+          "attempt_id": {"type": "integer", "minimum": 1, "maximum": 5},
+          "wave_id": {"type": "integer", "minimum": 1, "maximum": 20},
+          "spec_revision": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {"enum": ["PREFLIGHT", "DISPATCH_WAVE", "JOIN", "BLOCKER_RECOVERY"]}
+        },
+        "required": ["action"]
+      },
+      "then": {
+        "required": ["wave_id", "spec_revision"],
+        "properties": {
+          "wave_id": {"type": "integer", "minimum": 1, "maximum": 20},
+          "spec_revision": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"action": {"const": "CALL_BOSS"}}, "required": ["action"]},
+      "then": {
+        "required": ["wave_id"],
+        "properties": {"wave_id": {"enum": [10, 20]}}
+      }
+    },
+    {
+      "if": {"properties": {"action": {"const": "BLOCKER_RECOVERY"}}, "required": ["action"]},
+      "then": {
+        "required": ["wave_id"],
+        "properties": {"wave_id": {"type": "integer", "minimum": 1, "maximum": 19}}
+      }
+    },
+    {
+      "if": {
+        "properties": {"action": {"enum": ["EXPLAIN_INVALID_RESUME", "ASK_USER"]}},
+        "required": ["action"]
+      },
+      "then": {
+        "properties": {
+          "slot_id": {"type": "null"},
+          "attempt_id": {"type": "null"}
+        }
+      }
+    }
+  ]
+}

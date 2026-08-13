@@ -2,14 +2,16 @@
   "schema_version": 1,
   "kind": "BOOTSTRAP_WAVE_SPEC",
   "run_id": "fixture-run",
+  "phase_id": "phase-1",
   "wave_id": 1,
   "token_mode": "API",
   "billing_credential_scope": "API_CREDENTIALS",
   "spec_revision": "fixture-run:wave-1:abc123",
-  "decision_id": null,
-  "decision": null,
+  "revision_seq": 1,
+  "correlation_id": "corr-fixture-1",
   "confidence": "0%",
   "confidence_basis": "Bootstrap has no merged evidence.",
+  "max_slot_attempts": 2,
   "hypotheses": [
     {
       "hypothesis_id": "H-1",
@@ -31,13 +33,15 @@
       "correlation_refs": ["fixture-run"],
       "searchability": "KNOWN",
       "allowed_tools": ["ReadFile"],
-      "output_schema": "FACT_EVIDENCE_PACKET"
+      "output_schema": "FACT_EVIDENCE_PACKET",
+      "depends_on_slot_ids": []
     }
   ],
   "dispatch": {
     "mode": "PARALLEL",
     "join": "MERGER",
-    "coverage_budget": 0
+    "coverage_budget": 0,
+    "max_slots_per_wave": 10
   },
   "stop_condition": "Stop after the fixture contract is checked."
 }

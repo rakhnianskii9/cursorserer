@@ -6,15 +6,16 @@ description: >-
   webhook list/subscribe/test, and Meta docs/changelog search. Use when the user mentions Meta
   Developer Tools, Facebook/Meta app config, Graph API health, rate limits, App Review,
   compliance/violations, webhook subscriptions/fields/verify, or Meta developer docs/changelog.
-  Not for browser DevTools or IDE diagnostics.
+  Pair with host security guidance for tokens/webhooks. Not for browser
+  DevTools or IDE diagnostics.
 user-invocable: true
 disable-model-invocation: false
 ---
 
 # Meta Developer Tools MCP
 
-**Server:** `user-Meta Developer Tools`
-**Contract:** `GetMcpTools` once per session for this server → then `CallMcpTool`. Do **not** re-discover mid-task.
+**Server:** `user-Meta Developer Tools`  
+**Contract:** `GetMcpTools` once per session for this server → then `CallMcpTool`. Do **not** re-discover mid-task.  
 **App id SoT:** env key `FACEBOOK_APP_ID` (never print value). If unknown → `devtools_app_list` `action=list`.
 
 ## Boot (always, ≤2 calls)
@@ -79,13 +80,17 @@ discovery/search_docs + changelog/list_products (then get_changelog_url/get_rss_
 | Missing app in list | Likely consent not granted to DevTools MCP — tell USER to grant on Meta consent screen; do not assume app deleted. |
 | Rate status decode | `healthy`<70 · `warning`≥70 · `critical`≥90 · `throttled`@100 · `unmetered`. `call_volume.usage_rate` >1.0 = throttling. |
 | This MCP ≠ browser DevTools / IDE diagnostics | Never route Cursor/browser issues here. |
-| Code forensics | Focused Read/search first; Tenets only for unknown scope and CodeGraph/Octocode only for a structural gap. This MCP is for **live Meta app state**, not for reading local TypeScript. |
+| Code forensics | Focused Read/search first; Tenets only for unknown scope and CodeGraph/Octocode only for a structural gap. This MCP is for **live Meta app state**, not for reading our TS. |
 
-## Workspace correlation (when MCP must meet local code)
+## Repo anchors (when correlating MCP ↔ code)
 
-- Env key names (never print values): `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`, `FACEBOOK_WEBHOOK_VERIFY_TOKEN` (+ local aliases when present)
-- Prefer searching the target workspace for webhook/OAuth/subscription handlers and provider docs instead of assuming fixed filenames
-- Optional sync/observability labs stay separate opt-in skills
+- Env key names only: `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`,
+  `FACEBOOK_WEBHOOK_VERIFY_TOKEN` (never print values).
+- Correlate MCP state with the host app's Meta/Facebook webhook, OAuth, and
+  marketing modules via focused local search. Do not assume a fixed product
+  path layout.
+- This MCP is for **live Meta app state**, not a substitute for reading local
+  TypeScript.
 
 ## Output contract (short)
 

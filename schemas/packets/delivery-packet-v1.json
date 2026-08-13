@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rkx-delivery-packet-v1",
+  "title": "RKX DeliveryPacket v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "event_id", "run_id", "phase_id", "wave_id",
+    "spec_revision", "decision_id", "refs", "notification_type",
+    "correlation_id"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "event_id": {"type": "string", "minLength": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "phase_id": {"type": "string", "minLength": 1},
+    "wave_id": {"type": "integer", "minimum": 0, "maximum": 20},
+    "spec_revision": {"type": ["string", "null"], "minLength": 1},
+    "decision_id": {"type": ["string", "null"], "minLength": 1},
+    "refs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chat_summary", "lifecycle"],
+      "properties": {
+        "chat_summary": {"$ref": "#/$defs/artifactRef"},
+        "lifecycle": {"$ref": "#/$defs/artifactRef"}
+      }
+    },
+    "notification_type": {"enum": ["attention", "result"]},
+    "correlation_id": {"type": "string", "minLength": 1}
+  },
+  "$defs": {
+    "artifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[A-Fa-f0-9]{64}$"}
+      }
+    }
+  }
+}

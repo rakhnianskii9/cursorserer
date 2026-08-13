@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "conversation_id": "conversation-1",
+  "run_id": null,
+  "intent": "investigate fixture",
+  "scope": "control-plane",
+  "executor_mode": "CURSOR",
+  "continuation_policy": "ONE_WAVE",
+  "implementation_authorized": false,
+  "correlation_id": "corr-1",
+  "resume_run_id": null
+}

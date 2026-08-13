@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rkx-preflight-decision-v1",
+  "title": "RKX PreflightDecision v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "run_id",
+    "phase_id",
+    "wave_id",
+    "spec_revision",
+    "correlation_id",
+    "decision",
+    "action"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "PREFLIGHT_DECISION"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "wave_id": {"type": "integer", "minimum": 1, "maximum": 20},
+    "spec_revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "phase_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision": {
+      "enum": [
+        "DISPATCH",
+        "REPLAN",
+        "WAITING_USER",
+        "HARD_BLOCKER_CANDIDATE"
+      ]
+    },
+    "action": {
+      "enum": [
+        "DISPATCH_WAVE",
+        "PREFLIGHT",
+        "ASK_USER",
+        "BUILD_BLOCKER_PROPOSAL"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"decision": {"const": "DISPATCH"}}, "required": ["decision"]},
+      "then": {"properties": {"action": {"const": "DISPATCH_WAVE"}}}
+    },
+    {
+      "if": {"properties": {"decision": {"const": "REPLAN"}}, "required": ["decision"]},
+      "then": {"properties": {"action": {"const": "PREFLIGHT"}}}
+    },
+    {
+      "if": {"properties": {"decision": {"const": "WAITING_USER"}}, "required": ["decision"]},
+      "then": {"properties": {"action": {"const": "ASK_USER"}}}
+    },
+    {
+      "if": {"properties": {"decision": {"const": "HARD_BLOCKER_CANDIDATE"}}, "required": ["decision"]},
+      "then": {"properties": {"action": {"const": "BUILD_BLOCKER_PROPOSAL"}}}
+    }
+  ]
+}

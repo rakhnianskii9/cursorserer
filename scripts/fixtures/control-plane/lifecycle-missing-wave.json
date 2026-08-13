@@ -3,8 +3,11 @@
   "conversation_id": "fixture-conversation",
   "event_id": "fixture-event-missing-wave",
   "run_id": "fixture-run",
+  "phase_id": "phase-1",
   "kind": "completed",
   "notification_type": "result",
+  "waiting_reason": null,
+  "correlation_id": "corr-1",
   "problem_title": "Missing wave boundary",
   "summary": "This fixture must be rejected because wave is absent.",
   "full_verdict_available": false

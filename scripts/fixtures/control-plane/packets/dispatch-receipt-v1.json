@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "run_id": "fixture-run",
+  "phase_id": "phase-1",
+  "wave_id": 1,
+  "spec_revision": "fixture-run:wave-1:abc",
+  "correlation_id": "corr-1",
+  "slot_id": "CODE-1",
+  "transport_outcome": "RETURNED",
+  "attempt_id": 1
+}

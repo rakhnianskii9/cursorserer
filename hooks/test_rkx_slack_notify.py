@@ -304,6 +304,60 @@ class SlackNotificationTests(unittest.TestCase):
         self.assertTrue(delivered)
         self.assertEqual(len(sent), 1)
 
+    def test_stop_hook_delivers_canonical_wave_cap_by_exact_event(self) -> None:
+        run_id = "canonical-wave-cap"
+        event_id = "event-wave-cap-20"
+        conversation_id = "conversation-wave-cap-20"
+        run_dir = self.repo_root / "loops" / run_id
+        artifact_path = run_dir / "deliveries" / event_id / "lifecycle.json"
+        artifact_path.parent.mkdir(parents=True)
+        (run_dir / "state").mkdir()
+        (run_dir / "state/current.yaml").write_text(
+            "\n".join(
+                [
+                    f"conversation_id: {conversation_id}",
+                    f"pending_delivery_event_id: {event_id}",
+                    f"delivery_ref: loops/{run_id}/deliveries/{event_id}/lifecycle.json",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        artifact_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "event_id": event_id,
+                    "run_id": run_id,
+                    "phase_id": "phase-1",
+                    "wave_id": 20,
+                    "kind": "wave_cap",
+                    "notification_type": "attention",
+                    "waiting_reason": "WAVE_CAP",
+                    "correlation_id": "corr-wave-cap",
+                    "conversation_id": conversation_id,
+                    "problem_title": "Wave cap reached",
+                    "summary": "Final Boss/Merger/Advocate settlement remains unresolved.",
+                    "full_verdict_available": False,
+                }
+            ),
+            encoding="utf-8",
+        )
+        sent: list[dict] = []
+        environment = {
+            "RKX_SLACK_NOTIFY_MODE": "attention_and_result",
+            "RKX_SLACK_DEDUP_FILE": str(self.dedup_path),
+        }
+        with patch.dict(os.environ, environment, clear=False), patch.object(
+            notify, "deliver", side_effect=lambda card: sent.append(card)
+        ):
+            delivered = notify.process(
+                {"conversation_id": conversation_id}, repo_root=self.repo_root
+            )
+        self.assertTrue(delivered)
+        self.assertEqual(len(sent), 1)
+        self.assertIn("20", sent[0]["text"])
+
     def test_stale_and_malformed_artifacts_are_suppressed(self) -> None:
         stale_time = time.time() - 3601
         os.utime(self.artifact_path, (stale_time, stale_time))

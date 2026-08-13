@@ -6,23 +6,21 @@
   "additionalProperties": false,
   "required": [
     "schema_version",
-    "conversation_id",
     "event_id",
     "run_id",
-    "wave",
+    "phase_id",
+    "wave_id",
     "kind",
     "notification_type",
+    "waiting_reason",
+    "correlation_id",
+    "conversation_id",
     "problem_title",
-    "summary",
-    "full_verdict_available"
+    "summary"
   ],
   "properties": {
     "schema_version": {
       "const": 1
-    },
-    "conversation_id": {
-      "type": "string",
-      "minLength": 1
     },
     "event_id": {
       "type": "string",
@@ -32,14 +30,20 @@
       "type": "string",
       "minLength": 1
     },
-    "wave": {
+    "phase_id": {
       "type": "string",
       "minLength": 1
+    },
+    "wave_id": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 20
     },
     "kind": {
       "enum": [
         "started",
         "progress",
+        "wave_result",
         "waiting_user",
         "blocked",
         "completed",
@@ -53,6 +57,34 @@
         "result"
       ]
     },
+    "waiting_reason": {
+      "enum": [
+        "WAVE_CAP",
+        "USER_SCOPE",
+        "OFF_HOST",
+        null
+      ]
+    },
+    "decision_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "proposal_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "conversation_id": {
+      "type": "string",
+      "minLength": 1
+    },
     "problem_title": {
       "type": "string",
       "minLength": 1,
@@ -62,11 +94,6 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 2000
-    },
-    "capture_dir": {
-      "type": "string",
-      "pattern": "^[A-Za-z0-9._/-]+$",
-      "maxLength": 255
     },
     "blocker": {
       "type": "string",
@@ -83,6 +110,11 @@
       "type": "string",
       "format": "uri",
       "pattern": "^https?://[^\\s]+$"
+    },
+    "capture_dir": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._/-]+$",
+      "maxLength": 255
     },
     "decision_artifact": {
       "type": "object",
@@ -111,6 +143,55 @@
     {
       "if": {
         "properties": {
+          "kind": {
+            "enum": [
+              "wave_result",
+              "completed"
+            ]
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "notification_type": {
+            "const": "result"
+          },
+          "waiting_reason": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "waiting_user",
+              "blocked",
+              "failed",
+              "wave_cap"
+            ]
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "notification_type": {
+            "const": "attention"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
           "full_verdict_available": {
             "const": true
           }
@@ -128,7 +209,10 @@
           "full_verdict_available": {
             "const": false
           }
-        }
+        },
+        "required": [
+          "full_verdict_available"
+        ]
       },
       "then": {
         "not": {

@@ -40,5 +40,8 @@ gap, not as a mandatory step after Tenets or before direct inspection.
 
 ### If `.codegraph/` doesn't exist
 
-The MCP server returns "not initialized." Ask the user: *"I notice this project doesn't have CodeGraph initialized. Want me to run `codegraph init -i` to build the index?"*
+The MCP server returns "not initialized." Do **not** ask USER for dig permission.
+Mark `[DEGRADED: codegraph]` and continue with focused Read/search (and Octocode
+only if that structural gap remains). Optionally run `codegraph init -i` yourself
+when a local index build is appropriate; never stall on “can I look up callers?”.
 <!-- CODEGRAPH_END -->

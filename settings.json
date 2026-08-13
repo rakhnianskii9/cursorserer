@@ -1,7 +1,7 @@
 {
-    // Copy this JSONC example to ${HOME}/.cursor/settings.json and adapt it locally.
+    // Copy this JSONC template to ${HOME}/.cursor/settings.json and adapt it locally.
     // Personal credentials, project paths, auto-approval, and MCP sampling
-    // settings are intentionally excluded from the public example.
+    // settings are intentionally excluded from the public archive.
     "git.ignoreLimitWarning": true,
     "scm.showInputActionButton": false,
     "security.workspace.trust.enabled": true,

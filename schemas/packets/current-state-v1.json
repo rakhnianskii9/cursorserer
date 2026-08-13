@@ -1,0 +1,269 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rkx-current-state-v1",
+  "title": "RKX CurrentState v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "run_id", "phase_id", "conversation_id",
+    "investigation_status", "implementation_status", "product_status",
+    "current_wave", "boss_checkpoint_every", "checkpoint_10_completed",
+    "checkpoint_20_completed", "wave_cap", "max_slot_attempts",
+    "spec_revision", "correlation_id", "pending_action", "waiting_reason", "implementation_authorized",
+    "continuation_policy", "executor_mode", "state_revision", "previous_state_revision",
+    "previous_state_sha256", "awaiting_input", "pending_action_id", "last_applied_action_id"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "phase_id": {"type": "string", "minLength": 1},
+    "conversation_id": {"type": "string", "minLength": 1},
+    "investigation_status": {
+      "enum": ["BOOTSTRAP", "ACTIVE", "PAUSED_AFTER_WAVE", "WAITING_USER", "BLOCKED", "CONCLUDED"]
+    },
+    "implementation_status": {
+      "enum": ["NOT_REQUESTED", "AUTHORIZED", "IN_PROGRESS", "VALIDATING", "VALIDATED", "FAILED"]
+    },
+    "product_status": {"enum": ["UNKNOWN", "NOT_MET", "MET"]},
+    "current_wave": {"type": "integer", "minimum": 0, "maximum": 20},
+    "spec_revision": {"type": ["string", "null"], "minLength": 1},
+    "correlation_id": {"type": "string", "minLength": 1},
+    "boss_checkpoint_every": {"const": 10},
+    "checkpoint_10_completed": {"type": "boolean"},
+    "checkpoint_20_completed": {"type": "boolean"},
+    "wave_cap": {"const": 20},
+    "max_slot_attempts": {"type": "integer", "minimum": 1, "maximum": 5},
+    "pending_action": {
+      "enum": [
+        "NONE", "PREFLIGHT", "DISPATCH_WAVE", "REDISPATCH_SLOT", "JOIN",
+        "CALL_ADVOCATE", "CALL_BOSS", "CALL_IMPLEMENTER", "VALIDATE_IMPLEMENTATION",
+        "DELIVER", "ASK_USER", "EXPLAIN_INVALID_RESUME", "BLOCKER_RECOVERY"
+      ]
+    },
+    "waiting_reason": {"enum": ["WAVE_CAP", "USER_SCOPE", "OFF_HOST", null]},
+    "latest_decision_id": {"type": ["string", "null"]},
+    "latest_proposal_id": {"type": ["string", "null"]},
+    "pending_delivery_event_id": {"type": ["string", "null"]},
+    "delivery_ref": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "pattern": "^loops/[^/]+/deliveries/[^/]+/lifecycle\\.json$"
+    },
+    "implementation_authorized": {"type": "boolean"},
+    "continuation_policy": {"enum": ["ONE_WAVE", "CONTINUOUS"]},
+    "executor_mode": {"enum": ["API", "CURSOR"]},
+    "state_revision": {"type": "integer", "minimum": 1},
+    "previous_state_revision": {"type": ["integer", "null"], "minimum": 1},
+    "previous_state_sha256": {"type": ["string", "null"], "pattern": "^[A-Fa-f0-9]{64}$"},
+    "spec_ref": {"type": ["string", "null"], "minLength": 1},
+    "preflight_ref": {"type": ["string", "null"], "minLength": 1},
+    "awaiting_input": {"enum": ["USER", null]},
+    "pending_action_id": {"type": ["string", "null"], "minLength": 1},
+    "last_applied_action_id": {"type": ["string", "null"], "minLength": 1}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"current_wave": {"const": 0}}, "required": ["current_wave"]},
+      "then": {"properties": {"spec_revision": {"type": "null"}}},
+      "else": {
+        "required": ["spec_ref", "preflight_ref"],
+        "properties": {
+          "spec_revision": {"type": "string", "minLength": 1},
+          "spec_ref": {
+            "type": "string",
+            "pattern": "^loops/[^/]+/wave-([1-9]|1[0-9]|20)/specs/[0-9]{4}\\.yaml$"
+          },
+          "preflight_ref": {
+            "type": "string",
+            "pattern": "^loops/[^/]+/wave-([1-9]|1[0-9]|20)/preflights/[0-9]{4}\\.yaml$"
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"checkpoint_10_completed": {"const": true}}, "required": ["checkpoint_10_completed"]},
+      "then": {"properties": {"current_wave": {"minimum": 10}}}
+    },
+    {
+      "if": {"properties": {"current_wave": {"minimum": 11}}, "required": ["current_wave"]},
+      "then": {"properties": {"checkpoint_10_completed": {"const": true}}}
+    },
+    {
+      "if": {"properties": {"checkpoint_20_completed": {"const": true}}, "required": ["checkpoint_20_completed"]},
+      "then": {
+        "properties": {
+          "current_wave": {"const": 20},
+          "checkpoint_10_completed": {"const": true},
+          "pending_action": {"not": {"enum": ["PREFLIGHT", "DISPATCH_WAVE", "CALL_BOSS", "REDISPATCH_SLOT", "BLOCKER_RECOVERY"]}}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"pending_action": {"const": "CALL_BOSS"}}, "required": ["pending_action"]},
+      "then": {
+        "properties": {
+          "current_wave": {"enum": [10, 20]},
+          "investigation_status": {"const": "ACTIVE"}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"pending_action": {"const": "CALL_BOSS"}, "current_wave": {"const": 10}},
+        "required": ["pending_action", "current_wave"]
+      },
+      "then": {"properties": {"checkpoint_10_completed": {"const": false}}}
+    },
+    {
+      "if": {
+        "properties": {"pending_action": {"const": "CALL_BOSS"}, "current_wave": {"const": 20}},
+        "required": ["pending_action", "current_wave"]
+      },
+      "then": {"properties": {"checkpoint_20_completed": {"const": false}}}
+    },
+    {
+      "if": {"properties": {"waiting_reason": {"const": "WAVE_CAP"}}, "required": ["waiting_reason"]},
+      "then": {
+        "required": ["pending_delivery_event_id", "delivery_ref"],
+        "properties": {
+          "current_wave": {"const": 20},
+          "checkpoint_10_completed": {"const": true},
+          "checkpoint_20_completed": {"const": true},
+          "investigation_status": {"const": "WAITING_USER"},
+          "pending_action": {"const": "NONE"},
+          "awaiting_input": {"const": "USER"},
+          "latest_decision_id": {"type": "string", "minLength": 1},
+          "latest_proposal_id": {"type": "string", "minLength": 1},
+          "product_status": {"not": {"const": "MET"}},
+          "pending_delivery_event_id": {"type": "string", "minLength": 1},
+          "delivery_ref": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"pending_action": {"const": "DELIVER"}}, "required": ["pending_action"]},
+      "then": {
+        "properties": {
+          "pending_delivery_event_id": {"type": "string", "minLength": 1},
+          "delivery_ref": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"investigation_status": {"const": "WAITING_USER"}}, "required": ["investigation_status"]},
+      "then": {
+        "properties": {
+          "pending_action": {"const": "NONE"},
+          "awaiting_input": {"const": "USER"},
+          "waiting_reason": {"enum": ["WAVE_CAP", "USER_SCOPE", "OFF_HOST"]}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"pending_action": {"const": "CALL_IMPLEMENTER"}}, "required": ["pending_action"]},
+      "then": {
+        "properties": {
+          "implementation_authorized": {"const": true},
+          "investigation_status": {"const": "CONCLUDED"},
+          "implementation_status": {"const": "AUTHORIZED"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"implementation_authorized": {"const": false}}, "required": ["implementation_authorized"]},
+      "then": {
+        "properties": {
+          "implementation_status": {"const": "NOT_REQUESTED"},
+          "pending_action": {"not": {"const": "CALL_IMPLEMENTER"}}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"state_revision": {"const": 1}}, "required": ["state_revision"]},
+      "then": {
+        "properties": {
+          "previous_state_revision": {"type": "null"},
+          "previous_state_sha256": {"type": "null"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"state_revision": {"minimum": 2}}, "required": ["state_revision"]},
+      "then": {
+        "required": ["previous_state_revision", "previous_state_sha256"],
+        "properties": {
+          "previous_state_revision": {"type": "integer", "minimum": 1},
+          "previous_state_sha256": {"type": "string", "pattern": "^[A-Fa-f0-9]{64}$"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"implementation_status": {"const": "VALIDATED"}}, "required": ["implementation_status"]},
+      "then": {
+        "required": ["pending_delivery_event_id", "delivery_ref"],
+        "properties": {
+          "investigation_status": {"const": "CONCLUDED"},
+          "product_status": {"const": "MET"},
+          "pending_delivery_event_id": {"type": "string", "minLength": 1},
+          "delivery_ref": {
+            "type": "string",
+            "pattern": "^loops/[^/]+/deliveries/[^/]+/lifecycle\\.json$"
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"implementation_status": {"const": "FAILED"}}, "required": ["implementation_status"]},
+      "then": {
+        "required": ["pending_delivery_event_id", "delivery_ref"],
+        "properties": {
+          "investigation_status": {"const": "CONCLUDED"},
+          "product_status": {"const": "NOT_MET"},
+          "pending_delivery_event_id": {"type": "string", "minLength": 1},
+          "delivery_ref": {
+            "type": "string",
+            "pattern": "^loops/[^/]+/deliveries/[^/]+/lifecycle\\.json$"
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"pending_action": {"const": "VALIDATE_IMPLEMENTATION"}}, "required": ["pending_action"]},
+      "then": {
+        "properties": {
+          "implementation_authorized": {"const": true},
+          "investigation_status": {"const": "CONCLUDED"},
+          "implementation_status": {"const": "VALIDATING"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"pending_action": {"const": "NONE"}}, "required": ["pending_action"]},
+      "then": {"properties": {"pending_action_id": {"type": "null"}}}
+    },
+    {
+      "if": {"properties": {"pending_action": {"not": {"const": "NONE"}}}, "required": ["pending_action"]},
+      "then": {
+        "required": ["pending_action_id"],
+        "properties": {"pending_action_id": {"type": "string", "minLength": 1}}
+      }
+    },
+    {
+      "if": {"properties": {"awaiting_input": {"const": "USER"}}, "required": ["awaiting_input"]},
+      "then": {
+        "properties": {
+          "pending_action": {"const": "NONE"},
+          "investigation_status": {"const": "WAITING_USER"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"pending_action": {"const": "ASK_USER"}}, "required": ["pending_action"]},
+      "then": {"properties": {"awaiting_input": {"type": "null"}}}
+    },
+    {
+      "if": {"properties": {"pending_action": {"const": "BLOCKER_RECOVERY"}}, "required": ["pending_action"]},
+      "then": {"properties": {"current_wave": {"minimum": 1, "maximum": 19}}}
+    }
+  ]
+}

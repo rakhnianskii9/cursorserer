@@ -10,4 +10,4 @@ python3 "${SCRIPT_DIR}/validate_rkx_loops.py"
 python3 "${SCRIPT_DIR}/validate-rkx-blueprint-coverage.py"
 python3 "${SCRIPT_DIR}/validate-rkx-blueprint-coverage.py" --require-results
 python3 "${ROOT}/hooks/test_rkx_slack_notify.py"
-python3 "${ROOT}/hooks/test_rkx_write_easy_summary.py"
+python3 "${SCRIPT_DIR}/test_scheme_scenarios.py"

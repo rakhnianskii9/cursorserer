@@ -19,24 +19,21 @@ starts wave investigation and loads `rkx-loop-core`.
   available, bounded `BLUEPRINT-SCOUT` slots with the selected `CATALOG_ID`
   are added to the same parallel fan-out.
 - Mode routing maps API → `fact-slot`/`blueprint-scout` and CURSOR → `cursor-fact-slot`/`cursor-blueprint-scout`.
-- The group contains 1–10 narrow slots; each has exactly one hypothesis/source
-  and one expected fact. Independent slots from all wave groups are launched in
-  one parallel fan-out batch, not one at a time. The Checker checks only
-  evidence. After all slots join, the Merger saves each slot report to
-  `loops/<run>/wave-N/slots/<slot-id>/report.md`, then maintains compressed state
-  and the root graph, passes the synthesis check and canonical Root-depth gate,
-  and returns schema-v1 `NEXT_WAVE_SPEC`, `END`, or `HARD_BLOCKER`.
-- **DUAL ADVOCATE GATE:** after the post-wave Merger, route any
-  `HARD_BLOCKER` to the hard gate first. Soft only when `root >= 96%`,
-  Root-depth PASS, **and** `product_goal_met` (or disclosed
-  `title_only_scope`): one advisory audit; `CLEAN` → Chat summary;
-  `HOLE` → Chat summary + HOLE block (max 2 paragraphs), with no automatic next
-  wave. Otherwise Hard: Advocate before dispatch/accept/stop; `CLEAN` continues
-  NEXT; `HOLE` → one falsifiable next-check that advances `success_criteria`;
-  `HARD_BLOCKER` → one `BLOCKER_RECOVERY`. Soft does not replace hard.
-  Merger⇄Devil chat loops are
-  forbidden, as is a second Devil for the same `decision_id`; writes to
-  `loops/**` by Devil and `boss` are not part of this gate.
+- Independent slots from all wave groups are launched in
+  one parallel fan-out batch, not one at a time. Max **10 slots per wave**,
+  never 10 per group. The Checker checks only
+  evidence. After all slots join, Merger accounts for each logical slot
+  exactly once from
+  `loops/<run>/wave-<n>/slots/<slot-id>/attempts/<attempt-id>/report.md`,
+  then maintains `state/current.yaml` and the root graph, and emits a
+  Proposal. After Advocate settlement the accepted action is
+  `NEXT_WAVE_SPEC`, `END`, or `HARD_BLOCKER`.
+- **Advocate gate:** after the post-wave Merger Proposal, Orchestrator calls
+  `devil` once per `proposal_id`. `AdvocatePacket` is `CLEAN` or `HOLE`.
+  Material HOLE is not an accepted decision. `HARD_BLOCKER` gets at most one
+  `BLOCKER_RECOVERY` per proposal (forbidden at wave 20). Merger⇄Devil chat
+  loops are forbidden. Devil and Boss write nothing under `loops/**`. Boss is
+  checkpoint-only after accepted NEXT at wave 10 or 20.
 - The next wave begins only after the Merger, but its independent slots are
   launched in parallel again. With a runtime limit, only bounded concurrent
   batches marked degraded are allowed; intentional sequential dispatch is
@@ -48,9 +45,9 @@ starts wave investigation and loads `rkx-loop-core`.
   verifiable target, and impact target predicate. `blueprint_applicability` is
   accepted only as a matching legacy alias. A relevant reference that does not
   change root/plan/confidence receives `coverage_decision: OPTIONAL`.
-  Stop: soft END at root ≥96% **and** `product_goal_met` (or disclosed
-  `title_only_scope`) after soft CLEAN/HOLE, or a confirmed hard
-  `HARD_BLOCKER` after the Advocate and one bounded recovery.
+  Stop: accepted `END` at root ≥96% **and** `product_goal_met` (or disclosed
+  `title_only_scope`) after Advocate CLEAN or immaterial HOLE, or a confirmed
+  `HARD_BLOCKER` after Advocate and at most one bounded recovery.
 - Any confidence value, including confidence for a source/fact-slot, hypotheses,
   the root graph, and decisions, is recorded only in the `0%`–`100%` format
   with `CONFIDENCE_BASIS`. `high`/`medium`/`low`, decimals, and `NOT_STATED`
@@ -70,14 +67,14 @@ starts wave investigation and loads `rkx-loop-core`.
   are mandatory (Verdict and ASCII). Without all 5 parts **or** without
   `success_criteria` cites in part 1 and Verdict, `chat_itog_delivered` = FAIL.
 - A terminal and significant lifecycle status from the local agent → Slack on
-  phone: the stop-hook `.cursor/hooks/rkx-slack-notify.sh` reads only the
-  matching `loops/<run>/slack-notification.json` and sends a card of type
-  `attention` (a USER response/decision is needed) or `result` (the loop has
-  ended), with `problem_title` + user-facing meaning + blocker/next_action.
-  After the Chat summary has actually been delivered, MCP may send a separate full
-  verdict; the hook does not build a verdict from `state.md`, and the classes
-  are not duplicated. Webhook/bot secrets belong only in
-  `~/.cursor/rkx-slack-notify.env`.
+  phone: the stop-hook `.cursor/hooks/rkx-slack-notify.sh` reads the exact
+  lifecycle event `loops/<run>/deliveries/<event_id>/lifecycle.json` and sends a
+  card of type `attention` (a USER response/decision is needed) or `result`
+  (the loop has ended), with `problem_title` + user-facing meaning +
+  blocker/next_action. After the Chat summary has actually been delivered, MCP
+  may send a separate full verdict; the hook does not build a verdict from
+  `state/current.yaml`, and the classes are not duplicated. Webhook/bot secrets
+  belong only in `~/.cursor/rkx-slack-notify.env`.
 - For edits and deploys, retain the rules (`infrastructure-core` +
   `rkx-always-on`): an explicit L2 trigger, nginx pre-copy, no destructive git,
   no secrets in artifacts, and no Docker without the Ship gate.

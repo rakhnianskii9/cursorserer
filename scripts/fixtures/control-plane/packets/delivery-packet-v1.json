@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "event_id": "event-1",
+  "run_id": "fixture-run",
+  "phase_id": "phase-1",
+  "wave_id": 1,
+  "spec_revision": "fixture-run:wave-1:abc",
+  "decision_id": "dec-1",
+  "refs": {
+    "chat_summary": {
+      "path": "loops/fixture-run/deliveries/event-1/chat-summary.md",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "lifecycle": {
+      "path": "loops/fixture-run/deliveries/event-1/lifecycle.json",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "notification_type": "result",
+  "correlation_id": "corr-1"
+}

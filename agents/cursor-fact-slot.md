@@ -57,14 +57,14 @@ evaluate neighboring zones or entries.
 For the single pre-dispatch call in the `PREFLIGHT` group, the parent passes the
 exact `spec_revision` and the list of planned slots. This is not a wave slot or
 a fan-in participant: the checker returns capability observations for each
-planned slot, while the orchestrator verifies the revision and writes
-`preflight.yaml`.
+planned slot, while Merger writes
+`wave-<n>/preflights/<revision_seq>.yaml`. The orchestrator writes nothing.
 
 Slots from the same wave may run concurrently. This role must be
 order-independent, must not wait for sibling slots, and must not write shared
-wave artifacts. Return only the bounded fact packet below; the post-wave
-Merger persists this packet as
-`loops/<run>/wave-<n>/slots/<slot-id>/report.md`.
+wave artifacts. Write only the write-once attempt report
+`loops/<run>/wave-<n>/slots/<slot-id>/attempts/<attempt-id>/report.md` and
+return a SlotReceipt.
 
 ```
 FACT: <1–2 sentences>

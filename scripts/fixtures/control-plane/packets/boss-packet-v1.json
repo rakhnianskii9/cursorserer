@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "run_id": "fixture-run",
+  "phase_id": "phase-1",
+  "wave_id": 10,
+  "spec_revision": "fixture-run:wave-10:abc",
+  "checkpoint": 10,
+  "checkpoint_decision_id": "dec-wave-10-next",
+  "challenge": "Fixture challenge",
+  "alternative_roots": [],
+  "confidence_basis": "Fixture",
+  "duplicated_or_low_value_paths": [],
+  "highest_value_next_check": "One falsifiable check",
+  "correlation_id": "corr-1"
+}

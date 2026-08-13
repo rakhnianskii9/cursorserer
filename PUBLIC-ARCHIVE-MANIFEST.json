@@ -26,7 +26,7 @@
     "CURSOR-MODELS.md",
     "RKX-LOOP-BLUEPRINT-FLOW.md"
   ],
-  "public_example_roots": [
+  "public_archive_roots": [
     "agents",
     "commands",
     "hooks",
@@ -79,7 +79,7 @@
     "rkx-tenets"
   ],
   "exact_public_files": [
-    "assets/rkx-loop-flow.png",
+    "assets/rkx-loop-flow1_3.png",
     "assets/install-flow.png"
   ],
   "excluded_roots": [
@@ -141,7 +141,7 @@
     "schemas/lifecycle-artifact-v1.json",
     "schemas/install-manifest-v1.json",
     "schemas/runtime-inputs-v1.json",
-    "assets/rkx-loop-flow.png",
+    "assets/rkx-loop-flow1_3.png",
     "assets/install-flow.png",
     "rules/workspace-read-cache.mdc",
     "reference/system-design-primer/README.md",
@@ -150,10 +150,10 @@
   ],
   "binary_review": [
     {
-      "path": "assets/rkx-loop-flow.png",
-      "sha256": "c1dfb97ab87e96255b05a520793cba75bcd482c100a55947259cd58485fd0751",
-      "width": 880,
-      "height": 1788,
+      "path": "assets/rkx-loop-flow1_3.png",
+      "sha256": "a539fd26320bf9182aef641ad624545ac16cc51f84cb77673e3b9f701ac1bf75",
+      "width": 852,
+      "height": 1847,
       "review": "visual-review-complete"
     },
     {
@@ -187,7 +187,7 @@
     "no host-specific absolute paths",
     "no mutable latest package tags",
     "no sample filenames in the control-plane surface",
-    "all public example references resolve",
+    "all public archive references resolve",
     "exact binary allowlist and recorded hashes",
     "named public provider skills remain English and portable"
   ],

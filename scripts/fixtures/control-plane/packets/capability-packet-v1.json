@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "kind": "CAPABILITY_PACKET",
+  "run_id": "fixture-run",
+  "phase_id": "phase-1",
+  "wave_id": 1,
+  "spec_revision": "fixture-run:wave-1:abc",
+  "correlation_id": "corr-1",
+  "token_mode": "CURSOR",
+  "billing_credential_scope": "CURSOR_SUBSCRIPTION",
+  "model": "fixture-model",
+  "slots": [
+    {
+      "slot_id": "CODE-1",
+      "status": "READY",
+      "reason": null,
+      "searchability": "KNOWN",
+      "source_tool_mcp_availability": "ReadFile available",
+      "authenticated_context": "not_required",
+      "read_only_scope": "fixture",
+      "correlation_refs": null,
+      "revision_compatibility": "compatible"
+    }
+  ]
+}

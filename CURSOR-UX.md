@@ -38,9 +38,9 @@ slash command:
 | `blueprint-scout` | reference-pattern discovery slot | the verified checker model, read-only, background |
 | `cursor-blueprint-scout` | reference-pattern discovery slot (Cursor alias) | the verified checker model, read-only, background |
 | `merger` | plans the wave at bootstrap; after join, saves slot reports, writes merge/state/status/root graph/ledger, and plans the next wave | the verified Merger model, writable only for loop artifacts |
-| `devil` / Advocate | dual-mode: soft ≥96% (advisory) / hard <96% (gate) → `ATTACK_PACKET` | the verified Advocate model (`__MODEL_ADVOCATE__`), read-only; does not write `loops/**` or decide END/NEXT/HARD_BLOCKER |
-| `boss` | manual bounded check | the verified Boss model, read-only |
-| `implementer` | L2 changes after an explicit USER gate | the verified Merger model, writable; approved scope/plan + Merger evidence only |
+| `devil` / Advocate | once per `proposal_id` → `AdvocatePacket` (`CLEAN`\|`HOLE`) | the verified Advocate model (`__MODEL_ADVOCATE__`), read-only; does not write `loops/**` or decide END/NEXT/HARD_BLOCKER |
+| `boss` | checkpoint critic after wave 10 and wave 20 | the verified Boss model, read-only |
+| `implementer` | L2 changes when `implementation_authorized=true` | the verified Merger model, writable; approved ImplementationRequest only |
 
 The three-stage command pipeline is:
 
@@ -48,11 +48,13 @@ The three-stage command pipeline is:
 - `Build` — build and validate.
 - `Ship` — release or deploy.
 
-`implementer` is selected for delegation only after the literal user gates
-`Smash`; its header does not create a slash command. The orchestrator invokes
-one mode-specific fact slot (`fact-slot` or `cursor-fact-slot`) for preflight and saves only the matching
-`loops/<run>/wave-N/preflight.yaml`; `merger` saves the
-remaining loop artifacts for each wave under `loops/<run>/**`. Only
+`implementer` is selected for `CALL_IMPLEMENTER` when
+`implementation_authorized=true` (original request or a later explicit L2
+gate such as `Smash`). Its header does not create a slash command. The
+orchestrator invokes one mode-specific fact slot (`fact-slot` or
+`cursor-fact-slot`) for preflight. Merger writes
+`loops/<run>/wave-<n>/preflights/<revision_seq>.yaml` and the remaining loop
+artifacts under `loops/<run>/**`. The orchestrator writes zero files. Only
 `implementer` performs L2 product changes; Docker still requires a separate
 Ship gate.
 
@@ -71,13 +73,15 @@ Merger-qualified `zone × reference entry` pairs, not for the full catalog
 Cartesian product.
 
 After every slot has returned a result or an explicit terminal failure has been
-recorded for it, one fan-in/join runs through `merger`. Merger first saves each
-result to `loops/<run>/wave-N/slots/<slot-id>/report.md`, then runs the
-Root-depth gate and a separate synthesis check, and returns schema-v1
-`NEXT_WAVE_SPEC`, `END`, or `HARD_BLOCKER`. The next wave depends on this merge, but its
-independent slots are again launched in parallel. If the runtime limits the
-number of concurrent agents, bounded concurrent batches marked `DEGRADED` are
-allowed; intentionally launching one at a time is forbidden.
+recorded for it, one fan-in/join runs through `merger`. Checkers write only
+`wave-<n>/slots/<slot-id>/attempts/<attempt-id>/report.md`. Merger writes
+join, ledger, root graph, merge, and a Proposal (`proposal_id`). After
+Advocate settlement it accepts `NEXT_WAVE_SPEC`, `END`, or `HARD_BLOCKER`.
+POST_WAVE NEXT at wave 10/20 is a Boss checkpoint, not dispatch of N+1.
+The next wave's independent slots are again launched in parallel. If the
+runtime limits the number of concurrent agents, bounded concurrent batches
+marked `DEGRADED` are allowed; intentionally launching one at a time is
+forbidden.
 
 ### Preflight before dispatch
 
@@ -86,28 +90,22 @@ checker (`fact-slot` for API or `cursor-fact-slot` for CURSOR) in the `PREFLIGHT
 collects source/tool/MCP/browser
 capability, authenticated context, read-only scope, safe `correlation_refs`, and
 the code/catalog/config revision. The Orchestrator verifies `spec_revision` and
-writes the write-once `preflight.yaml`; Merger does not participate.
+forwards the CapabilityPacket. Merger writes the write-once
+`wave-<n>/preflights/<revision_seq>.yaml`.
 `STALE_SCOPE` returns the spec to Merger, while `WAITING_USER` / `BLOCKED`
 require the single USER choice: **check as-is**, **provide what's needed**, or
 **stop**.
 
-### DUAL ADVOCATE GATE (soft ≥96% / hard <96%)
+### Advocate gate (once per `proposal_id`)
 
-After post-wave Merger, any `HARD_BLOCKER` enters the hard gate before
-confidence is evaluated. Otherwise the orchestrator checks `root confidence`.
+After post-wave Merger emits a Proposal, Orchestrator calls `devil` once and
+forwards `AdvocatePacket` (`CLEAN`|`HOLE`) to Merger. `decision_id` appears
+only after settlement. Material HOLE is not an accepted decision.
 
-- **SOFT** (`root >= 96%` + Root-depth PASS): success is locked; one
-  advisory audit by `Advocate (devil)`. Soft does not cancel success or start a
-  wave/recovery. `CLEAN` → Chat summary. `HOLE` → Chat summary + a
-  `### HOLE — identified gap` block (max 2 paragraphs); follow-up only on a
-  USER command.
-- **HARD** (`root < 96%`, incomplete Root-depth, or `HARD_BLOCKER`): Advocate before dispatch/accept/stop (the former
-  ALWAYS-ON gate). `CLEAN` + NEXT → parallel fan-out; `HOLE` → one
-  `SINGLE_NEXT_CHECK`; `HARD_BLOCKER` → one `BLOCKER_RECOVERY`. Soft does not
-  replace hard.
-- A Merger⇄Devil chat loop and a second Advocate for the same `decision_id` are
-  forbidden.
-- `boss` / `/loop-boss` do not participate in this gate.
+- `END`/`NEXT`/`HARD_BLOCKER` follow `RKX-LOOP-BLUEPRINT-FLOW.md` (I14, I25).
+- A Merger⇄Devil chat loop is forbidden.
+- `boss` is checkpoint-only after accepted NEXT at wave 10 or 20; `/loop-boss`
+  does not replace that checkpoint.
 
 Merger's canonical Root-depth questions:
 
@@ -124,10 +122,11 @@ only as a `0%`–`100%` percentage. The formats `high`, `medium`, `0.92`,
 
 ## Chat summary ALWAYS
 
-After soft END (`CLEAN`/`HOLE`) / confirmed recovery `HARD_BLOCKER` / phase
-completion, the orchestrator **must** deliver a complete five-part Chat summary in
-English: a business/UI sentence, a five-column table, technical facts, an
-ASCII/box-drawing diagram, and a human-readable `### 5) Verdict` ✅/❌.
+After accepted `END` / confirmed `HARD_BLOCKER` / WAVE_CAP / ONE_WAVE pause /
+phase completion, the orchestrator **must** deliver a complete five-part Chat
+summary in English from the Merger DeliveryPacket: a business/UI sentence, a
+five-column table, technical facts, an ASCII/box-drawing diagram, and a
+human-readable `### 5) Verdict` ✅/❌.
 Part 5 follows the binding template in
 `.cursor/skills/rkx-loop-core/SKILL.md`: an arbitrary-length causal chain,
 translation of facts into UI/business logic, and `**Basis:** *...*` /
@@ -142,10 +141,12 @@ is considered undelivered.
 Cursor Slack Cloud Agents ≠ a local Agent Chat notification. For a local loop:
 
 - stop-hook `.cursor/hooks/rkx-slack-notify.sh` sends only two run-scoped cards
-  from `loops/<run>/slack-notification.json`: `attention` when USER input or a
-  decision is required, and `result` when the loop completes;
+  from the exact lifecycle event
+  `loops/<run>/deliveries/<event_id>/lifecycle.json`: `attention` when USER
+  input or a decision is required, and `result` when the loop completes;
+  ONE_WAVE `wave_result` is chat-only;
 - after a Chat summary has actually been delivered, MCP may send a separate full
-  verdict; the hook does not rebuild it from `state.md`;
+  verdict; the hook does not rebuild it from `state/current.yaml`;
 - the card contains a detailed problem title, user-facing meaning, an optional
   blocker, one next action, and `run · wave`;
 - when there is no exact artifact/conversation match or Slack transport fails,

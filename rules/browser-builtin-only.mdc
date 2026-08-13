@@ -9,6 +9,8 @@ alwaysApply: true
 
 - **Only** built-in Cursor **@Browser**: Browser Tab, `workbench.browser.*`, MCP **cursor-ide-browser**.
 - Agent sequence: `browser_navigate` → `browser_snapshot` → `browser_take_screenshot` (`browser_lock` / `browser_click` when needed).
+- Agent drives Browser Tab itself for UI evidence; do not ask USER to open an
+  external browser or paste a screenshot (`always-self-serve-dig-evidence.mdc`).
 - Dev URL: `bash scripts/resolve-dev-browser-url.sh` or `.dev/forwarded-ports.env` (dynamic forward: `localhost:<DEV_LOCAL_PORT>/`, not necessarily `:${DEV_APP_PORT}`).
 
 ## PROHIBITED

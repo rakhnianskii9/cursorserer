@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rkx-proposal-v1",
+  "title": "RKX Proposal v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "proposal_id",
+    "run_id",
+    "phase_id",
+    "wave_id",
+    "spec_revision",
+    "correlation_id",
+    "candidate_action",
+    "finding_kind",
+    "confidence",
+    "confidence_basis"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "proposal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "wave_id": {"type": "integer", "minimum": 1, "maximum": 20},
+    "spec_revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "phase_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "candidate_action": {
+      "enum": [
+        "NEXT_WAVE_SPEC",
+        "END",
+        "HARD_BLOCKER"
+      ]
+    },
+    "finding_kind": {
+      "type": "string",
+      "minLength": 1
+    },
+    "confidence": {
+      "type": "string",
+      "pattern": "^(100|[1-9]?\\d)%$"
+    },
+    "confidence_basis": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "not": {
+    "required": [
+      "decision_id"
+    ]
+  }
+}

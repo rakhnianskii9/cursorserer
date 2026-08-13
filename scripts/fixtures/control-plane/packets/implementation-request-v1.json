@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "phase_id": "phase-1",
+  "run_id": "fixture-run",
+  "wave_id": 1,
+  "spec_revision": "fixture-run:wave-1:abc",
+  "decision_id": "dec-1",
+  "scope": "Apply approved fix",
+  "artifact_refs": [
+    "loops/fixture-run/decisions/dec-1.yaml"
+  ],
+  "correlation_id": "corr-1"
+}

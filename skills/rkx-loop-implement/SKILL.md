@@ -7,11 +7,14 @@ disable-model-invocation: true
 ---
 # rkx-loop-implement
 
-Proceed only after an explicit L2 `Smash` request. The read-only orchestrator delegates this work to `implementer`, with
-the approved implementation scope/plan and relevant Merger scenario, state,
-and root-cause evidence. The implementer follows that scope, creates the nginx
-pre-copy before nginx edits, avoids secrets and destructive Git, and sends the
-resulting diff to validation.
+Proceed only when `implementation_authorized=true` (original request or a later
+explicit L2 gate such as `Smash`) and Merger has written
+`ImplementationRequest`. The readonly orchestrator delegates this work to
+`implementer` with that request plus the approved scope/plan and relevant
+Merger scenario, state, and root-cause evidence. The implementer follows that
+scope, creates the nginx pre-copy before nginx edits, avoids secrets and
+destructive Git, and returns `ImplementationReceipt` plus the resulting diff
+to validation. Receipt is not product success.
 
 ## Implementer boundaries
 

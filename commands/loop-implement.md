@@ -11,7 +11,7 @@ Merger scenario, state, and root-cause evidence. The role is delegation-only;
 this command does not create a second implementation agent or a slash duplicate.
 
 Preserve the L2 intent, nginx pre-copy, no destructive git/secrets, and
-explicit Docker `Ship` gate. Return changed files and relevant validation.
-Caller returns the focused implementation result. A five-part summary is
-required only when this command is running inside an explicitly requested wave
-that reaches a terminal decision.
+explicit Docker deploy gate. The Implementer still writes write-once
+`implementation/<phase_id>/implementer-report.md` and returns
+`ImplementationReceipt`. Merger validates the receipt and, after
+VALIDATED/FAILED, emits the terminal DeliveryPacket.

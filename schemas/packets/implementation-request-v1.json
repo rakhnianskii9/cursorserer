@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rkx-implementation-request-v1",
+  "title": "RKX ImplementationRequest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "phase_id",
+    "run_id",
+    "wave_id",
+    "spec_revision",
+    "decision_id",
+    "scope",
+    "artifact_refs",
+    "correlation_id"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "phase_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "wave_id": {"type": "integer", "minimum": 1, "maximum": 20},
+    "spec_revision": {"type": "string", "minLength": 1},
+    "decision_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

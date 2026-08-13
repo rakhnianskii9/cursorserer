@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rkx-advocate-packet-v1",
+  "title": "RKX AdvocatePacket v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "run_id", "phase_id", "wave_id", "spec_revision",
+    "proposal_id", "verdict", "single_next_check", "material", "correlation_id"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "phase_id": {"type": "string", "minLength": 1},
+    "wave_id": {"type": "integer", "minimum": 1, "maximum": 20},
+    "spec_revision": {"type": "string", "minLength": 1},
+    "proposal_id": {"type": "string", "minLength": 1},
+    "verdict": {"enum": ["CLEAN", "HOLE"]},
+    "single_next_check": {"type": ["string", "null"]},
+    "material": {"type": "boolean"},
+    "correlation_id": {"type": "string", "minLength": 1}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"verdict": {"const": "CLEAN"}}, "required": ["verdict"]},
+      "then": {
+        "properties": {
+          "single_next_check": {"type": "null"},
+          "material": {"const": false}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"verdict": {"const": "HOLE"}}, "required": ["verdict"]},
+      "then": {
+        "properties": {"single_next_check": {"type": "string", "minLength": 1}}
+      }
+    }
+  ]
+}

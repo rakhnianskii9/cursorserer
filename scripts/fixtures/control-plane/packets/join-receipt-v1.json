@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "run_id": "fixture-run",
+  "phase_id": "phase-1",
+  "wave_id": 1,
+  "spec_revision": "fixture-run:wave-1:abc",
+  "correlation_id": "corr-1",
+  "planned_slot_ids": ["CODE-1"],
+  "accounted_slot_ids": ["CODE-1"],
+  "slot_receipts": [
+    {
+      "schema_version": 1,
+      "run_id": "fixture-run",
+      "phase_id": "phase-1",
+      "wave_id": 1,
+      "spec_revision": "fixture-run:wave-1:abc",
+      "correlation_id": "corr-1",
+      "slot_id": "CODE-1",
+      "attempt_id": 1,
+      "status": "COMPLETE",
+      "report_ref": "loops/fixture-run/wave-1/slots/CODE-1/attempts/1/report.md",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "model": "fixture-model"
+    }
+  ],
+  "dispatch_receipts": [
+    {
+      "schema_version": 1,
+      "run_id": "fixture-run",
+      "phase_id": "phase-1",
+      "wave_id": 1,
+      "spec_revision": "fixture-run:wave-1:abc",
+      "correlation_id": "corr-1",
+      "slot_id": "CODE-1",
+      "transport_outcome": "RETURNED",
+      "attempt_id": 1
+    }
+  ],
+  "complete": true
+}

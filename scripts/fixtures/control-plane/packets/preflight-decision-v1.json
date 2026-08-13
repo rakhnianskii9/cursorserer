@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "kind": "PREFLIGHT_DECISION",
+  "run_id": "fixture-run",
+  "wave_id": 1,
+  "spec_revision": "fixture-run:wave-1:abc",
+  "correlation_id": "corr-1",
+  "phase_id": "phase-1",
+  "decision": "DISPATCH",
+  "action": "DISPATCH_WAVE"
+}

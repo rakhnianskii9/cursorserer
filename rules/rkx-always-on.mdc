@@ -20,7 +20,8 @@ Language with USER: **English**. TZ: `${TZ}`. Do not translate logs unless asked
 
 ## L1 / L2
 
-- Before `Smash` — **no** product edits during dig/plan.
+- Before `implementation_authorized=true` or an explicit later L2 gate
+  (`Smash`) — **no** product edits during dig/plan.
 - `Build` ≠ Docker authorization. `Ship` / `Build docker` → `pnpm build:compose` after green validate(diff).
 - Nginx: ALWAYS pre-copy `---HH-MM---DD_MM_YY` before edit.
 
@@ -32,15 +33,12 @@ only for DB/API) and bounded `BLUEPRINT-SCOUT` slots with the selected `CATALOG_
 when a local reference registry is available;
 groups are not sequential stages. After the join, post-wave Merger saves separate
 slot reports, runs the Root-depth gate, and
-returns `NEXT_WAVE_SPEC`, candidate-`END`, or `HARD_BLOCKER`. Every
-post-wave decision uses the **DUAL ADVOCATE GATE**: Soft only when
-`root >= 96%`, Root-depth PASS, **and** `product_goal_met` (or disclosed
-`title_only_scope`): one advisory audit; `CLEAN` → Chat summary; `HOLE` →
-Chat summary + HOLE block (max 2 paragraphs), with no auto-next.
-Otherwise Hard: `Advocate (devil)` before dispatch/accept/stop; `CLEAN`
-continues NEXT; `HOLE` → one falsifiable next-check that advances
-`success_criteria`; `HARD_BLOCKER` → one `BLOCKER_RECOVERY`. Soft does not
-replace hard. Later
+returns a `ControllerAction`. Candidate actions after Advocate settlement are
+`NEXT_WAVE_SPEC`, `END`, or `HARD_BLOCKER`. Every
+post-wave Proposal uses the Advocate gate once per `proposal_id`:
+`AdvocatePacket` `CLEAN`|`HOLE`; material HOLE is not accepted;
+`HARD_BLOCKER` gets at most one `BLOCKER_RECOVERY` (forbidden at wave 20).
+Boss checkpoints accepted NEXT at wave 10 and wave 20. Later
 waves close only recorded gaps and use the same parallel
 fan-out. Reference coverage uses only Merger-qualified `zone ×
 reference entry` pairs after relevance/applicability/causal/impact gates;
@@ -56,7 +54,7 @@ Confidence in every source/slot/Merger/root artifact is mandatory as a percentag
 Explicit loop/wave completion is **Chat summary ALWAYS** from `rkx-loop-core`: 5 parts in
 one English answer (business/UI **quoting `success_criteria`**, five-column table,
 technical facts, ASCII, ✅/❌ Verdict that also quotes `success_criteria` and
-`goal_closure`). Soft `END` requires `product_goal_met` (or disclosed
+`goal_closure`). Accepted `END` requires `product_goal_met` (or disclosed
 `title_only_scope`). Part 5 must contain an arbitrary-length causal chain,
 translation of facts into UI/business logic, and `**Basis:** *...*` /
 `**Where:** *evidence-id · exact % · factual model*` according to the binding template
@@ -67,12 +65,12 @@ fake summary is forbidden.
 ## Slack notify (phone)
 
 Cursor Slack Cloud Agents ≠ a local Agent Chat notification. The local stop-hook
-reads only matching `loops/<run>/slack-notification.json` and sends
+reads the exact matching `loops/<run>/deliveries/<event_id>/lifecycle.json` and sends
 one of two card types: `attention` when a USER response/decision is needed or
 `result` when the loop is complete. The card contains a detailed `problem_title`,
 user-facing `summary`, optional `blocker`, one `next_action`,
 `run · wave`.
-`state.md` is not the source of user-facing text. MCP sends the full
+`state/current.yaml` is not the source of user-facing verdict text. MCP sends the full
 five-part verdict separately only after
 `chat_itog_delivered`; the hook and MCP do not duplicate the same message class.
 No artifact/conversation match — fail-open and stay silent. Secrets belong only in

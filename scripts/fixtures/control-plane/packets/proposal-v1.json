@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "proposal_id": "prop-1",
+  "run_id": "fixture-run",
+  "wave_id": 1,
+  "spec_revision": "fixture-run:wave-1:abc",
+  "correlation_id": "corr-1",
+  "phase_id": "phase-1",
+  "candidate_action": "END",
+  "finding_kind": "root_supported",
+  "confidence": "96%",
+  "confidence_basis": "Fixture evidence."
+}

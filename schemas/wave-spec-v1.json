@@ -1,241 +1,119 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.invalid/cursor-control-plane/schemas/wave-spec-v1.json",
+  "$id": "rkx-wave-spec-v1",
   "title": "RKX Wave Specification v1",
   "type": "object",
-  "additionalProperties": true,
-  "allOf": [
-    {
-      "not": {
-        "anyOf": [
-          {
-            "required": [
-              "decision_kind"
-            ]
-          },
-          {
-            "required": [
-              "status"
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "if": {"properties": {"token_mode": {"const": "API"}}},
-      "then": {"properties": {"billing_credential_scope": {"const": "API_CREDENTIALS"}}}
-    },
-    {
-      "if": {"properties": {"token_mode": {"const": "CURSOR"}}},
-      "then": {"properties": {"billing_credential_scope": {"const": "CURSOR_SUBSCRIPTION"}}}
-    },
-    {
-      "if": {"properties": {"token_mode": {"const": "CODEX"}}},
-      "then": {"properties": {"billing_credential_scope": {"const": "CODEX_SUBSCRIPTION"}}}
-    }
-  ],
+  "additionalProperties": false,
   "required": [
-    "schema_version",
-    "kind",
-    "run_id",
-    "wave_id",
-    "token_mode",
-    "billing_credential_scope",
-    "spec_revision",
-    "confidence",
-    "confidence_basis",
-    "hypotheses",
-    "slots",
-    "dispatch",
-    "stop_condition"
+    "schema_version", "kind", "run_id", "phase_id", "wave_id", "token_mode",
+    "billing_credential_scope", "spec_revision", "revision_seq", "correlation_id", "confidence",
+    "confidence_basis", "hypotheses", "slots", "dispatch", "stop_condition",
+    "max_slot_attempts"
   ],
   "properties": {
-    "schema_version": {
-      "const": 1
-    },
-    "kind": {
-      "enum": [
-        "BOOTSTRAP_WAVE_SPEC",
-        "NEXT_WAVE_SPEC",
-        "WAVE_DECISION"
-      ]
-    },
-    "run_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "wave_id": {
-      "type": "integer",
-      "minimum": 1
-    },
-    "token_mode": {
-      "enum": [
-        "API",
-        "CURSOR",
-        "CODEX"
-      ]
-    },
-    "billing_credential_scope": {
-      "enum": [
-        "API_CREDENTIALS",
-        "CURSOR_SUBSCRIPTION",
-        "CODEX_SUBSCRIPTION"
-      ]
-    },
-    "spec_revision": {
-      "type": "string",
-      "minLength": 1
-    },
-    "decision_id": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "decision": {
-      "enum": [
-        "NEXT_WAVE_SPEC",
-        "END",
-        "HARD_BLOCKER",
-        "BLOCKER_RECOVERY",
-        "SINGLE_NEXT_CHECK",
-        null
-      ]
-    },
-    "confidence": {
-      "type": "string",
-      "pattern": "^(100|[1-9]?\\d)%$"
-    },
-    "confidence_basis": {
-      "type": "string",
-      "minLength": 1
-    },
+    "schema_version": {"const": 1},
+    "kind": {"enum": ["BOOTSTRAP_WAVE_SPEC", "NEXT_WAVE_SPEC", "BLOCKER_RECOVERY_SPEC"]},
+    "run_id": {"type": "string", "minLength": 1},
+    "phase_id": {"type": "string", "minLength": 1},
+    "wave_id": {"type": "integer", "minimum": 1, "maximum": 20},
+    "token_mode": {"enum": ["API", "CURSOR"]},
+    "billing_credential_scope": {"enum": ["API_CREDENTIALS", "CURSOR_SUBSCRIPTION"]},
+    "spec_revision": {"type": "string", "minLength": 1},
+    "revision_seq": {"type": "integer", "minimum": 1},
+    "blocker_recovery_of_proposal_id": {"type": ["string", "null"], "minLength": 1},
+    "correlation_id": {"type": "string", "minLength": 1},
+    "confidence": {"type": "string", "pattern": "^(100|[1-9]?\\d)%$"},
+    "confidence_basis": {"type": "string", "minLength": 1},
+    "max_slot_attempts": {"type": "integer", "minimum": 1, "maximum": 5},
     "hypotheses": {
       "type": "array",
-      "minItems": 0,
+      "minItems": 1,
       "items": {
         "type": "object",
-        "additionalProperties": true,
-        "required": [
-          "hypothesis_id",
-          "statement",
-          "state",
-          "confidence",
-          "confidence_basis"
-        ],
+        "additionalProperties": false,
+        "required": ["hypothesis_id", "statement", "state", "confidence", "confidence_basis"],
         "properties": {
-          "hypothesis_id": {
-            "type": "string",
-            "minLength": 1
-          },
-          "statement": {
-            "type": "string",
-            "minLength": 1
-          },
-          "state": {
-            "enum": [
-              "CANDIDATE",
-              "SUPPORTED",
-              "WEAKENED",
-              "REJECTED"
-            ]
-          },
-          "confidence": {
-            "type": "string",
-            "pattern": "^(100|[1-9]?\\d)%$"
-          },
-          "confidence_basis": {
-            "type": "string",
-            "minLength": 1
-          }
+          "hypothesis_id": {"type": "string", "minLength": 1},
+          "statement": {"type": "string", "minLength": 1},
+          "state": {"enum": ["CANDIDATE", "SUPPORTED", "WEAKENED", "REJECTED"]},
+          "confidence": {"type": "string", "pattern": "^(100|[1-9]?\\d)%$"},
+          "confidence_basis": {"type": "string", "minLength": 1}
         }
       }
     },
     "slots": {
       "type": "array",
-      "minItems": 0,
+      "minItems": 1,
       "maxItems": 10,
       "items": {
         "type": "object",
-        "additionalProperties": true,
+        "additionalProperties": false,
         "required": [
-          "slot_id",
-          "hypothesis_id",
-          "source",
-          "expected_fact",
-          "expected_decision_change",
-          "requirement",
-          "correlation_refs",
-          "searchability"
+          "slot_id", "hypothesis_id", "source", "group", "expected_fact",
+          "expected_decision_change", "requirement", "correlation_refs",
+          "searchability", "allowed_tools", "output_schema",
+          "depends_on_slot_ids"
         ],
         "properties": {
-          "slot_id": {
-            "type": "string",
-            "minLength": 1
-          },
-          "hypothesis_id": {
-            "type": "string",
-            "minLength": 1
-          },
-          "source": {
-            "type": "string",
-            "minLength": 1
-          },
-          "expected_fact": {
-            "type": "string",
-            "minLength": 1
-          },
-          "expected_decision_change": {
-            "type": "string",
-            "minLength": 1
-          },
-          "requirement": {
-            "enum": [
-              "REQUIRED",
-              "OPTIONAL"
-            ]
-          },
-          "correlation_refs": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
-          },
-          "searchability": {
-            "enum": [
-              "KNOWN",
-              "UNKNOWN",
-              "NOT_APPLICABLE"
-            ]
-          }
+          "slot_id": {"type": "string", "minLength": 1},
+          "hypothesis_id": {"type": "string", "minLength": 1},
+          "source": {"type": "string", "minLength": 1},
+          "group": {"type": "string", "minLength": 1},
+          "expected_fact": {"type": "string", "minLength": 1},
+          "expected_decision_change": {"type": "string", "minLength": 1},
+          "requirement": {"enum": ["REQUIRED", "OPTIONAL"]},
+          "correlation_refs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "searchability": {"enum": ["KNOWN", "UNKNOWN", "NOT_APPLICABLE"]},
+          "allowed_tools": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "output_schema": {"type": "string", "minLength": 1},
+          "depends_on_slot_ids": {"type": "array", "maxItems": 0}
         }
       }
     },
     "dispatch": {
       "type": "object",
-      "additionalProperties": true,
-      "required": [
-        "mode",
-        "join",
-        "coverage_budget"
-      ],
+      "additionalProperties": false,
+      "required": ["mode", "join", "coverage_budget", "max_slots_per_wave"],
       "properties": {
-        "mode": {
-          "const": "PARALLEL"
-        },
-        "join": {
-          "const": "MERGER"
-        },
-        "coverage_budget": {
-          "type": "integer",
-          "minimum": 0
+        "mode": {"const": "PARALLEL"},
+        "join": {"const": "MERGER"},
+        "coverage_budget": {"type": "integer", "minimum": 0},
+        "max_slots_per_wave": {"const": 10}
+      }
+    },
+    "stop_condition": {"type": "string", "minLength": 1}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"token_mode": {"const": "API"}}, "required": ["token_mode"]},
+      "then": {"properties": {"billing_credential_scope": {"const": "API_CREDENTIALS"}}}
+    },
+    {
+      "if": {"properties": {"token_mode": {"const": "CURSOR"}}, "required": ["token_mode"]},
+      "then": {"properties": {"billing_credential_scope": {"const": "CURSOR_SUBSCRIPTION"}}}
+    },
+    {
+      "if": {"properties": {"kind": {"const": "BLOCKER_RECOVERY_SPEC"}}, "required": ["kind"]},
+      "then": {
+        "required": ["blocker_recovery_of_proposal_id"],
+        "properties": {
+          "blocker_recovery_of_proposal_id": {"type": "string", "minLength": 1},
+          "wave_id": {"type": "integer", "minimum": 1, "maximum": 19},
+          "slots": {
+            "minItems": 1,
+            "maxItems": 1,
+            "items": {
+              "properties": {"requirement": {"const": "REQUIRED"}}
+            }
+          }
         }
       }
     },
-    "stop_condition": {
-      "type": "string",
-      "minLength": 1
+    {
+      "if": {"properties": {"kind": {"enum": ["BOOTSTRAP_WAVE_SPEC", "NEXT_WAVE_SPEC"]}}, "required": ["kind"]},
+      "then": {
+        "properties": {"blocker_recovery_of_proposal_id": {"type": "null"}}
+      }
     }
-  }
+  ]
 }

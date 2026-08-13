@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "event_id": "event-1",
+  "run_id": "fixture-run",
+  "phase_id": "phase-1",
+  "wave_id": 1,
+  "kind": "completed",
+  "notification_type": "result",
+  "waiting_reason": null,
+  "decision_id": "dec-1",
+  "proposal_id": "prop-1",
+  "correlation_id": "corr-1",
+  "conversation_id": "conversation-1",
+  "problem_title": "Fixture",
+  "summary": "Done"
+}

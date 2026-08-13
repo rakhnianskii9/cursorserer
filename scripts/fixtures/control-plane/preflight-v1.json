@@ -1,7 +1,15 @@
 {
+  "kind": "CAPABILITY_PREFLIGHT",
   "schema_version": 1,
+  "run_id": "fixture-run",
+  "phase_id": "phase-1",
+  "wave_id": 1,
+  "correlation_id": "corr-fixture-1",
   "preflight_spec_revision": "fixture-run:wave-1:abc123",
-  "orchestrator_resolution": "DISPATCH_READY",
+  "revision_seq": 1,
+  "token_mode": "API",
+  "billing_credential_scope": "API_CREDENTIALS",
+  "merger_decision": "DISPATCH",
   "slots": [
     {
       "slot_id": "CODE-1",
@@ -11,7 +19,8 @@
       "authenticated_context": "not_required",
       "read_only_scope": "fixture",
       "correlation_refs": null,
-      "revision_compatibility": "compatible"
+      "revision_compatibility": "compatible",
+      "searchability": "KNOWN"
     }
   ]
 }

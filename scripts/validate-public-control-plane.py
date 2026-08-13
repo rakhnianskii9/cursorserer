@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the public example archive or a materialized local runtime.
+"""Validate the public archive or a materialized local runtime.
 
 This validator uses the Python standard library and, when available, PyYAML for
 strict YAML parsing. It checks the release boundary rather than claiming that
@@ -42,6 +42,7 @@ PRIVATE_PATTERNS = (
 LIFECYCLE_KINDS = {
     "started",
     "progress",
+    "wave_result",
     "waiting_user",
     "blocked",
     "completed",
@@ -318,7 +319,7 @@ def validate_surface_links(paths: Iterable[Path], errors: list[str]) -> None:
         for skill_name in load_pattern.findall(text):
             candidate = f"skills/{skill_name}/SKILL.md"
             if candidate not in path_set:
-                fail(errors, f"{relative} loads missing public skill example: {skill_name}")
+                fail(errors, f"{relative} loads missing public skill: {skill_name}")
 
     for relative in paths:
         if not relative.as_posix().startswith("agents/") or not relative.name.endswith(
@@ -459,12 +460,14 @@ def validate_contract_fixtures(errors: list[str]) -> None:
         "conversation_id",
         "event_id",
         "run_id",
-        "wave",
+        "phase_id",
+        "wave_id",
         "kind",
         "notification_type",
+        "waiting_reason",
+        "correlation_id",
         "problem_title",
         "summary",
-        "full_verdict_available",
     }
     if required_terminal - set(terminal):
         fail(errors, "terminal lifecycle fixture is incomplete")
@@ -472,14 +475,15 @@ def validate_contract_fixtures(errors: list[str]) -> None:
         fail(errors, "terminal lifecycle fixture has an invalid kind")
     if terminal.get("full_verdict_available") is False and "full_verdict_url" in terminal:
         fail(errors, "terminal lifecycle fixture has a URL while unavailable")
-    decision_artifact = terminal.get("decision_artifact", {})
-    if not re.fullmatch(r"[A-Fa-f0-9]{64}", str(decision_artifact.get("sha256", ""))):
+    decision_artifact = terminal.get("decision_artifact") or {}
+    digest = decision_artifact.get("sha256")
+    if digest is not None and not re.fullmatch(r"[A-Fa-f0-9]{64}", str(digest)):
         fail(errors, "terminal lifecycle fixture has an invalid artifact digest")
 
     missing_wave = load_fixture(
         "scripts/fixtures/control-plane/lifecycle-missing-wave.json", errors
     )
-    if "wave" in missing_wave:
+    if "wave_id" in missing_wave or "wave" in missing_wave:
         fail(errors, "missing-wave fixture unexpectedly contains wave")
     invalid_kind = load_fixture(
         "scripts/fixtures/control-plane/lifecycle-invalid-kind.json", errors
@@ -517,7 +521,7 @@ def validate_json_schemas(errors: list[str]) -> None:
         from jsonschema.exceptions import SchemaError
     except ImportError:
         return
-    pairs = (
+    pairs = [
         ("schemas/wave-spec-v1.json", "scripts/fixtures/control-plane/wave-spec-v1.json"),
         (
             "schemas/lifecycle-artifact-v1.json",
@@ -527,7 +531,19 @@ def validate_json_schemas(errors: list[str]) -> None:
             "schemas/runtime-inputs-v1.json",
             "scripts/fixtures/control-plane/runtime-inputs-valid.json",
         ),
-    )
+    ]
+    packet_dir = ROOT / "schemas" / "packets"
+    packet_fixtures = ROOT / "scripts" / "fixtures" / "control-plane" / "packets"
+    if packet_dir.is_dir() and packet_fixtures.is_dir():
+        for schema_path in sorted(packet_dir.glob("*-v1.json")):
+            fixture_path = packet_fixtures / schema_path.name
+            if fixture_path.is_file():
+                pairs.append(
+                    (
+                        schema_path.relative_to(ROOT).as_posix(),
+                        fixture_path.relative_to(ROOT).as_posix(),
+                    )
+                )
     for schema_name, fixture_name in pairs:
         schema = load_fixture(schema_name, errors)
         fixture = load_fixture(fixture_name, errors)
@@ -593,7 +609,7 @@ def validate_archive(
             stderr=subprocess.PIPE,
         )
         if result.returncode:
-            fail(errors, f"easy-summary example smoke test failed: {result.stderr.strip()}")
+            fail(errors, f"easy-summary smoke test failed: {result.stderr.strip()}")
     test_env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "PYTHONPATH": "hooks"}
     if tmp_dir is not None:
         try:

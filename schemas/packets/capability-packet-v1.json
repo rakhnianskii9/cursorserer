@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rkx-capability-packet-v1",
+  "title": "RKX CapabilityPacket v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "run_id",
+    "phase_id",
+    "wave_id",
+    "spec_revision",
+    "correlation_id",
+    "token_mode",
+    "billing_credential_scope",
+    "model",
+    "slots"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "CAPABILITY_PACKET"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "wave_id": {"type": "integer", "minimum": 1, "maximum": 20},
+    "spec_revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "phase_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "token_mode": {
+      "enum": [
+        "API",
+        "CURSOR"
+      ]
+    },
+    "model": {"type": "string", "minLength": 1},
+    "billing_credential_scope": {
+      "enum": ["API_CREDENTIALS", "CURSOR_SUBSCRIPTION"]
+    },
+    "slots": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "slot_id",
+          "status",
+          "reason",
+          "searchability",
+          "source_tool_mcp_availability",
+          "authenticated_context",
+          "read_only_scope",
+          "correlation_refs",
+          "revision_compatibility"
+        ],
+        "properties": {
+          "slot_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "READY",
+              "UNAVAILABLE",
+              "STALE",
+              "INVALID"
+            ]
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "searchability": {
+            "enum": [
+              "KNOWN",
+              "UNKNOWN",
+              "NOT_APPLICABLE"
+            ]
+          },
+          "source_tool_mcp_availability": {"type": "string"},
+          "authenticated_context": {"type": "string"},
+          "read_only_scope": {"type": ["string", "boolean"]},
+          "correlation_refs": {"type": ["array", "string", "null"]},
+          "revision_compatibility": {"type": "string"}
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"token_mode": {"const": "API"}}, "required": ["token_mode"]},
+      "then": {"properties": {"billing_credential_scope": {"const": "API_CREDENTIALS"}}}
+    },
+    {
+      "if": {"properties": {"token_mode": {"const": "CURSOR"}}, "required": ["token_mode"]},
+      "then": {"properties": {"billing_credential_scope": {"const": "CURSOR_SUBSCRIPTION"}}}
+    }
+  ]
+}

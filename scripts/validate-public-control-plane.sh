@@ -20,8 +20,8 @@ case "${1:-}" in
     if [[ -f "${ROOT}/hooks/test_rkx_slack_notify.py" ]]; then
       python3 "${ROOT}/hooks/test_rkx_slack_notify.py"
     fi
-    if [[ -f "${ROOT}/hooks/test_rkx_write_easy_summary.py" ]]; then
-      python3 "${ROOT}/hooks/test_rkx_write_easy_summary.py"
+    if [[ -f "${SCRIPT_DIR}/test_scheme_scenarios.py" ]]; then
+      python3 "${SCRIPT_DIR}/test_scheme_scenarios.py"
     fi
     ;;
   *)

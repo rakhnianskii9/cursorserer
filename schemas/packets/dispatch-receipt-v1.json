@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rkx-dispatch-receipt-v1",
+  "title": "RKX DispatchReceipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "phase_id",
+    "wave_id",
+    "spec_revision",
+    "slot_id",
+    "transport_outcome",
+    "attempt_id",
+    "correlation_id"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "phase_id": {"type": "string", "minLength": 1},
+    "wave_id": {"type": "integer", "minimum": 1, "maximum": 20},
+    "spec_revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "slot_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "transport_outcome": {
+      "enum": [
+        "RETURNED",
+        "FAILED",
+        "TIMED_OUT",
+        "CANCELLED"
+      ]
+    },
+    "attempt_id": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    }
+  }
+}

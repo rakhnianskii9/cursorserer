@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Cursor stop hook → run-scoped RKX Slack notification card.
 #
-# The helper reads loops/<run>/slack-notification.json and never derives
-# user-facing text from the globally newest state.md. It is deliberately
-# fail-open: a missing artifact or Slack outage must not break Cursor.
+# The helper resolves state/current.yaml.pending_delivery_event_id and reads
+# exactly deliveries/<event-id>/lifecycle.json. It never chooses a run or
+# event by mtime. A missing artifact or Slack outage does not mutate run state.
 #
 # Env (${HOME}/.cursor/rkx-slack-notify.env):
 #   SLACK_WEBHOOK_URL       Incoming Webhook

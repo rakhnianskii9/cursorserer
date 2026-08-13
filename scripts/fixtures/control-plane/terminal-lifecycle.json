@@ -3,14 +3,15 @@
   "conversation_id": "fixture-conversation",
   "event_id": "fixture-event",
   "run_id": "fixture-run",
-  "wave": "wave-1",
+  "phase_id": "phase-1",
+  "wave_id": 1,
   "kind": "completed",
   "notification_type": "result",
+  "waiting_reason": null,
+  "decision_id": "dec-1",
+  "proposal_id": "prop-1",
+  "correlation_id": "corr-1",
   "problem_title": "Fixture scenario",
   "summary": "Fixture evidence reached a terminal result.",
-  "decision_artifact": {
-    "path": "loops/fixture-run/wave-1/merge.md",
-    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
-  },
   "full_verdict_available": false
 }

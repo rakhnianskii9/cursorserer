@@ -18,6 +18,9 @@ SUPPORTED_NOTIFICATION_TYPES = {"attention", "result"}
 # Agents routinely confuse notification_type with kind. Map aliases so delivery
 # stays industrial even when writers use the wrong vocabulary.
 _KIND_ALIASES = {
+    # Valid chat-only lifecycle event. It is intentionally not in
+    # SUPPORTED_KINDS, so Slack ignores manual ONE_WAVE summaries.
+    "wave_result": "wave_result",
     "started": "started",
     "start": "started",
     "progress": "progress",
@@ -161,7 +164,14 @@ def read_artifact(path: Path) -> dict[str, Any] | None:
     required = ("conversation_id", "event_id", "run_id", "problem_title", "summary")
     if any(not _string(artifact.get(field)) for field in required):
         return None
-    if artifact.get("run_id") != path.parent.name:
+    run_id = _string(artifact.get("run_id"))
+    if path.name == "slack-notification.json":
+        expected_run = path.parent.name
+    elif path.parent.name and path.parent.parent.name == "deliveries":
+        expected_run = path.parent.parent.parent.name
+    else:
+        expected_run = path.parent.name
+    if run_id != expected_run:
         return None
     if "full_verdict_available" in artifact and not isinstance(
         artifact["full_verdict_available"], bool
@@ -199,7 +209,68 @@ def persist_normalized_artifact(path: Path) -> dict[str, Any] | None:
     return read_artifact(path)
 
 
-def latest_artifact(
+def _load_current_state(run_dir: Path) -> dict[str, Any]:
+    for name in ("current.yaml", "current.json"):
+        path = run_dir / "state" / name
+        if not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if name.endswith(".json"):
+            try:
+                data = json.loads(text)
+            except json.JSONDecodeError:
+                continue
+            return as_dict(data)
+        # Minimal YAML subset: key: value lines (no nested blocks required).
+        state: dict[str, Any] = {}
+        for line in text.splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#") or ":" not in stripped:
+                continue
+            key, _, value = stripped.partition(":")
+            key = key.strip()
+            value = value.strip().strip("\"'")
+            if value.lower() in {"null", "~", ""}:
+                state[key] = None
+            elif value.lower() in {"true", "false"}:
+                state[key] = value.lower() == "true"
+            else:
+                try:
+                    state[key] = int(value)
+                except ValueError:
+                    state[key] = value
+        return state
+    return {}
+
+
+def _resolve_delivery_path(
+    repo_root_path: Path, run_dir: Path, event_id: str, delivery_ref: str | None
+) -> Path | None:
+    expected = (run_dir / "deliveries" / event_id / "lifecycle.json").resolve()
+    candidates: list[Path] = []
+    if isinstance(delivery_ref, str) and delivery_ref:
+        referenced = (repo_root_path / delivery_ref).resolve()
+        if referenced != expected:
+            return None
+        candidates.append(referenced)
+    candidates.append(expected)
+    # Legacy single-file runs are readable only through an exact current-state
+    # event pointer. New runs always use deliveries/<event_id>/lifecycle.json.
+    candidates.append(run_dir / "slack-notification.json")
+    for path in candidates:
+        try:
+            path.relative_to(repo_root_path.resolve())
+        except ValueError:
+            continue
+        if path.is_file():
+            return path
+    return None
+
+
+def artifact_by_exact_event(
     repo_root_path: Path,
     conversation: str,
     *,
@@ -207,29 +278,72 @@ def latest_artifact(
     predicate: Callable[[dict[str, Any]], bool],
     now: float | None = None,
 ) -> tuple[Path, dict[str, Any]] | None:
+    """Select lifecycle artifact by exact event pointer — never by mtime."""
+
     if not conversation:
         return None
     now = time.time() if now is None else now
     loops_root = repo_root_path / "loops"
     if not loops_root.is_dir():
         return None
-    matches: list[tuple[float, Path, dict[str, Any]]] = []
-    for path in loops_root.glob("*/slack-notification.json"):
-        try:
-            modified = path.stat().st_mtime
-        except OSError:
-            continue
-        if now - modified > max_age_seconds:
-            continue
-        artifact = read_artifact(path)
-        if artifact is None or artifact.get("conversation_id") != conversation:
-            continue
-        if predicate(artifact):
-            matches.append((modified, path, artifact))
-    if not matches:
+
+    exact: list[tuple[Path, dict[str, Any]]] = []
+    legacy_singles: list[tuple[Path, dict[str, Any]]] = []
+
+    for run_dir in sorted(path for path in loops_root.iterdir() if path.is_dir()):
+        state = _load_current_state(run_dir)
+        if state.get("conversation_id") == conversation:
+            event_id = state.get("pending_delivery_event_id")
+            if isinstance(event_id, str) and event_id:
+                path = _resolve_delivery_path(
+                    repo_root_path,
+                    run_dir,
+                    event_id,
+                    state.get("delivery_ref")
+                    if isinstance(state.get("delivery_ref"), str)
+                    else None,
+                )
+                if path is not None:
+                    try:
+                        modified = path.stat().st_mtime
+                    except OSError:
+                        modified = now
+                    if now - modified <= max_age_seconds:
+                        artifact = read_artifact(path)
+                        if (
+                            artifact is not None
+                            and artifact.get("conversation_id") == conversation
+                            and artifact.get("event_id") == event_id
+                            and predicate(artifact)
+                        ):
+                            exact.append((path, artifact))
+
+        legacy_path = run_dir / "slack-notification.json"
+        if legacy_path.is_file() and not state.get("pending_delivery_event_id"):
+            try:
+                modified = legacy_path.stat().st_mtime
+            except OSError:
+                continue
+            if now - modified > max_age_seconds:
+                continue
+            artifact = read_artifact(legacy_path)
+            if (
+                artifact is not None
+                and artifact.get("conversation_id") == conversation
+                and predicate(artifact)
+            ):
+                legacy_singles.append((legacy_path, artifact))
+
+    if len(exact) == 1:
+        return exact[0]
+    if exact:
         return None
-    _, path, artifact = max(matches, key=lambda item: item[0])
-    return path, artifact
+    if len(legacy_singles) == 1:
+        return legacy_singles[0]
+    return None
+
+
+latest_artifact = artifact_by_exact_event
 
 
 def _string(value: Any) -> str:

@@ -4,6 +4,13 @@ description: Use when an explicit rkx-loop or loop-bug requires the RKX wave pro
 ---
 # rkx-loop-core
 
+Canonical packet topology, ownership, and transitions:
+`RKX-LOOP-BLUEPRINT-FLOW.md`. Orchestrator is readonly and executes only a
+`ControllerAction`. Merger writes shared state including
+`wave-<n>/preflights/<revision_seq>.yaml`. Advocate runs once per
+`proposal_id`; `decision_id` appears only after settlement. Token modes are
+`API | CURSOR` only.
+
 Use this internal skill only after an explicit `/rkx-loop` or `/loop-bug`.
 Ordinary code work stays direct: focused inspection, the minimal safe change,
 and proportionate validation. Wave protocol owns evidence collection; **Chat summary
@@ -12,18 +19,20 @@ never replaces the chat report.
 
 ## Safety boundaries
 
-- L1 is evidence and planning only. Product edits require an explicit
-  `Smash` request. `Build` assembles and validates; it is not Docker permission.
+- L1 is evidence and planning only. Product edits require
+  `implementation_authorized=true` on the original request, or a later
+  explicit L2 gate (`Smash`). `Build` assembles and validates; it is not
+  Docker permission.
 - Docker requires a green diff validation and explicit `Ship` or
   `Build docker`. Never write secrets to artifacts or use destructive Git.
 - Before editing `nginx/`, create the required timestamped sibling copy.
-- The orchestrator invokes one token-mode fact slot for preflight, then writes
-  only the exact matching `wave-N/preflight.yaml`; it never writes manifests,
-  specs, slot reports, decisions, state, root graphs, ledgers, or product
-  files. All other loop-artifact persistence remains with `merger`; after the
-  L2 gate, it delegates implementation to `implementer` with the approved
-  implementation scope/plan and relevant Merger scenario, state, and root-cause
-  evidence.
+- The orchestrator is readonly. It invokes one token-mode fact slot for
+  preflight and forwards the CapabilityPacket to `merger`; Merger writes
+  `loops/<run>/wave-<n>/preflights/<revision_seq>.yaml`. The orchestrator
+  never writes manifests, specs, slot reports, decisions, state, root
+  graphs, ledgers, summaries, lifecycle artifacts, or product files. After
+  the L2 gate, it delegates implementation to `implementer` with the
+  approved ImplementationRequest.
 - `implementer` may only execute that approved scope. It does not broaden the
   diagnosis, dispatch checker slots, or override Merger/Boss; it reports
   changed files and relevant validation to the caller.
@@ -91,11 +100,14 @@ product PASS condition. Every run must also record `success_criteria`.
 
 **Advocate rules (all loops):**
 
-- Hard `HOLE` `SINGLE_NEXT_CHECK` must advance `success_criteria` (or the
-  named access needed for it). It must not reframe the dig onto a title
-  keyword when `title_only_scope` is false and a product PASS remains open.
-- Soft Advocate may flag a scope HOLE if Chat/decision closed the title but
-  not `success_criteria`; it still cannot auto-start a wave.
+- Advocate runs once per Merger `proposal_id` and returns `AdvocatePacket`
+  `CLEAN` or `HOLE`. It does not write files or mint `decision_id`.
+- Material `HOLE` is never an AcceptedDecision: Merger revises/mints a
+  Proposal and Advocate runs again. Immaterial `HOLE` may accept with a
+  recorded rationale.
+- A `HOLE` next-check must advance `success_criteria` (or the named access
+  needed for it). It must not reframe the dig onto a title keyword when
+  `title_only_scope` is false and a product PASS remains open.
 
 ### `CAPABILITY_PREFLIGHT`
 
@@ -104,75 +116,62 @@ token-mode `fact-slot` with group `PREFLIGHT`. The subagent returns capability
 observations for every planned slot: source/tool/MCP availability,
 authenticated context, read-only scope, `correlation_refs`, and
 code/catalog/config revision compatibility. The orchestrator validates the
-exact `spec_revision` and writes a write-once `preflight.yaml`.
+exact `spec_revision` and forwards the CapabilityPacket. Merger writes a
+write-once `wave-<n>/preflights/<revision_seq>.yaml`. Singleton
+`preflight.yaml` is not canonical.
 
-Preflight is neither a wave nor a fan-out slot: it never joins the fan-in,
-starts Advocate, or invokes Merger. A `STALE_SCOPE` result returns the spec to
-Merger. For `WAITING_USER` or `BLOCKED`, ask USER exactly one choice:
-**check as-is**, **provide what is needed**, or **stop**. Never
-represent `not checked` or an unsearchable key as `not found`.
+Preflight is neither a wave nor a fan-out slot. Capability observation per
+slot is `READY | UNAVAILABLE | STALE | INVALID` and is not a transition
+action. Merger records PreflightDecision
+`DISPATCH | REPLAN | WAITING_USER | HARD_BLOCKER_CANDIDATE` and returns a
+`ControllerAction`. `REPLAN` mints a new spec revision; `WAITING_USER`
+parks `pending_action=NONE` and `awaiting_input=USER`; a blocker candidate
+goes to Advocate. Never represent `not checked` or an unsearchable key as
+`not found`.
 
-`preflight.yaml` is a `CAPABILITY_PREFLIGHT` artifact with
-`schema_version: 1`, `preflight_spec_revision`, and
-`orchestrator_resolution: DISPATCH_READY|STALE_SCOPE|WAITING_USER|BLOCKED|STOPPED`.
-Each planned slot records `slot_id`, `status: READY|WAITING_USER|BLOCKED`,
-availability, authentication state, read-only scope, correlation refs, and
-revision compatibility. Only `READY` slots dispatch. A non-ready `REQUIRED`
-slot follows the single user-choice flow; a non-ready `OPTIONAL` slot is saved
-as skipped/degraded and does not block the READY fan-out. A slot with
-`searchability: UNKNOWN` is never dispatched without the recorded user choice.
+Each planned slot in the preflight artifact records `slot_id` and capability
+status. Only `READY` REQUIRED slots dispatch. A non-ready OPTIONAL slot is
+saved as skipped/degraded and does not block the READY fan-out.
 
-After every completed wave, the next Merger call first persists each bounded
-slot report separately, then synthesizes the wave and plans the next decision.
-It returns exactly one of:
+After every completed wave: join → Merger Proposal (`proposal_id`,
+`candidate_action`) → Advocate → accepted decision. Candidate actions are
+exactly:
 
 - `NEXT_WAVE_SPEC` — evidence-backed hypotheses, slots, and expected facts;
 - `END` — root-depth gate passed with root confidence at least `96%` **and**
   `goal_closure.product_goal_met: yes` (or explicit `title_only_scope: true`
   with `question_answered: yes` disclosed);
 - `HARD_BLOCKER` — the missing source/access is named with exactly one next
-  check. This is provisional until the **HARD Advocate** pass and its one
-  bounded recovery handoff complete.
+  check. This is provisional until Advocate settlement and at most one
+  `BLOCKER_RECOVERY` per `proposal_id` (forbidden at wave 20 / after
+  checkpoint 20).
 
 Merger may refine, reject, split, or replace hypotheses only from supplied
-evidence. A fact-slot never creates a diagnosis. The orchestrator executes the
-returned spec and owns dispatch timing, but does not replace Merger's
+evidence. A fact-slot never creates a diagnosis. The orchestrator executes
+only the returned `ControllerAction` and does not replace Merger's
 hypothesis or root-depth decision.
 
-### DUAL ADVOCATE GATE (soft = locked PASS path / hard = open PASS path)
+### Advocate gate (once per `proposal_id`)
 
-`Advocate (devil)` is the existing read-only runtime alias, bound to GLM 5.2 Max /
-`__MODEL_ADVOCATE__`; it is not a new tool or role. After every **post-wave** Merger
-decision, first check `root confidence` and Root-depth, then choose mode:
+`Advocate (devil)` is the existing read-only runtime alias, bound to
+`__MODEL_ADVOCATE__`. After every post-wave (or checkpoint) Merger Proposal,
+Orchestrator runs exactly one Advocate pass on that `proposal_id` and
+forwards `AdvocatePacket` to Merger. Bootstrap and individual slots never
+receive an Advocate pass. Boss is checkpoint-only (waves 10/20) and is not
+this gate.
 
-1. **SOFT** — `root >= 96%`, Root-depth PASS, **and**
-   (`product_goal_met: yes` **or** disclosed `title_only_scope: true`).
-   Success is locked; no next wave starts. Run exactly one advisory Advocate
-   audit. Soft cannot undo the locked success, cannot spawn a wave, and cannot
-   start recovery.
-   - `CLEAN` → deliver Chat summary; no HOLE block.
-   - `HOLE` → deliver Chat summary plus optional `### HOLE` advisory block
-     (max 2 paragraphs). `SINGLE_NEXT_CHECK` is shown to USER; follow-up dig
-     starts only on explicit USER command.
-2. **HARD** — `root < 96%` (or incomplete Root-depth / unmet `success_criteria`
-   without title-only scope / `HARD_BLOCKER` path).
-   Run exactly one hard Advocate pass before dispatch/accept/stop, same as the
-   former ALWAYS-ON gate:
-   - `NEXT_WAVE_SPEC` + `CLEAN` → dispatch recorded gaps.
-   - `HOLE` → one falsifiable `SINGLE_NEXT_CHECK` that advances
-     `success_criteria` (no title-keyword reframe when product PASS is open)
-     as one-check NEXT or one interpretive re-synthesis.
-   - `HARD_BLOCKER` → one `BLOCKER_RECOVERY` Merger handoff.
+- `END + CLEAN` → accept END
+- `END + HOLE` material → revised NEXT proposal; immaterial → accept END
+  with recorded rationale
+- `NEXT + CLEAN` → accept NEXT_WAVE_SPEC
+- `NEXT + HOLE` → revised NEXT with one falsifiable check
+- `HARD_BLOCKER` → `BLOCKER_RECOVERY` (≤1 REQUIRED slot) then PREFLIGHT;
+  forbidden at wave 20 / after checkpoint 20; cap HARD_BLOCKER → DELIVER
+  only
 
-Bootstrap and individual slots never receive an Advocate pass. Soft does **not**
-replace hard: soft is only on the locked-success path; hard remains for `<96%`.
-
-Each post-wave decision has a unique `decision_id`. Record `advocate_mode`
-(`soft`|`hard`), `advocate_status`, `advocate_passed`, and
-`recovery_attempted` against that identity so retries cannot duplicate the
-gate. `needs_devil` may remain in legacy payloads but is informational only.
-`devil` returns only `ATTACK_PACKET` and neither writes artifacts, spawns
-slots, nor decides the Merger outcome.
+`decision_id` appears only after settlement. `devil` returns only
+`AdvocatePacket` and neither writes artifacts, spawns slots, nor decides the
+Merger outcome. Never a Merger⇄Advocate chat loop.
 
 ### Confidence format law
 
@@ -193,20 +192,17 @@ its entries:
 
 ```yaml
 schema_version: 1
-kind: BOOTSTRAP_WAVE_SPEC # BOOTSTRAP_WAVE_SPEC | NEXT_WAVE_SPEC | WAVE_DECISION
+kind: BOOTSTRAP_WAVE_SPEC # BOOTSTRAP_WAVE_SPEC | NEXT_WAVE_SPEC | BLOCKER_RECOVERY_SPEC
 run_id: <run-id>
+phase_id: <phase-id>
 wave_id: 1
 token_mode: <API|CURSOR> # caller-selected execution mode
 billing_credential_scope: <API_CREDENTIALS|CURSOR_SUBSCRIPTION>
 spec_revision: <immutable run/wave/slot fingerprint>
-decision_id: <post-wave-unique-id or null for bootstrap>
-decision_kind: NEXT_WAVE_SPEC | END | HARD_BLOCKER | null
-advocate_mode: soft | hard | null
-advocate_status: NOT_REQUIRED | PENDING | CLEAN | HOLE
-advocate_passed: false
-recovery_attempted: false
-recovery_class: NONE # NONE | CAPABILITY_RECOVERY | EVIDENCE_CHANGING_RECOVERY
-requires_user_action: false
+revision_seq: 1
+correlation_id: <request correlation id>
+max_slot_attempts: 3
+# proposal_id / decision_id are not WaveSpec fields; they live on Proposal / AcceptedDecision
 confidence: "<0%–100%>"
 confidence_basis: <evidence-based reason>
 problem_title: <verbatim USER scenario>
@@ -337,31 +333,21 @@ it exactly.
 
 ### Durable decision and coverage contract
 
-Every completed wave updates the run-level `loops/<run>/latest-decision.yaml`
-pointer to the current immutable decision and its artifact references. Merger
-persists every qualified and rejected reference pair in the `waiver_ledger`
-with qualification failures and evidence refs; a waiver is not silently dropped.
-When the hard Advocate returns a `HOLE` without new facts, the only allowed
-same-facts interpretation is one `INTERPRETIVE_RE_SYNTHESIS` artifact under the
-same decision, never a rewritten decision or an automatic dispatch.
+Every completed wave updates canonical `loops/<run>/state/current.yaml` (CAS
+on `state_revision`). `latest-decision.*` is not authoritative for new runs.
+Merger persists every qualified and rejected reference pair in the
+`waiver_ledger` with qualification failures and evidence refs; a waiver is
+not silently dropped.
 
-For `BOOTSTRAP_WAVE_SPEC`, `decision_kind` is null, Root-depth is `not_evaluated`, and the initial
+For `BOOTSTRAP_WAVE_SPEC`, Root-depth is `not_evaluated` and the initial
 evidence-backed hypotheses are the planning input. Reference `candidates` and
 `qualified_pairs` are empty at bootstrap; `coverage_decision` is
-`NOT_EVALUATED`. A `NEXT_WAVE_SPEC` uses `kind: NEXT_WAVE_SPEC` and
-`decision_kind: NEXT_WAVE_SPEC`. Terminal decisions use `kind: WAVE_DECISION`
-and `decision_kind: END|HARD_BLOCKER`; their `slots` are empty and the
-Root-depth answers and evidence references are mandatory. `decision_id`,
-`decision_kind`, and advocate fields are required only for post-wave decisions.
-Post-wave Advocate uses dual-mode:
-`advocate_mode: soft` when `root >= 96%` **and** (`product_goal_met: yes` or
-`title_only_scope: true`) (advisory), `hard` when `root < 96%` or product PASS
-remains unmet without title-only scope.
-A `BLOCKER_RECOVERY` handoff reuses the original blocker `decision_id`; it is a
-bounded completion of the hard gate, not a second post-wave decision or a
-second Advocate pass. `CAPABILITY_RECOVERY` keeps that decision id. An
-`EVIDENCE_CHANGING_RECOVERY` creates a new decision id and must pass a new
-Advocate gate.
+`NOT_EVALUATED`. A later wave uses `kind: NEXT_WAVE_SPEC`. Recovery uses
+`kind: BLOCKER_RECOVERY_SPEC` with `blocker_recovery_of_proposal_id`.
+Accepted transitions live on `AcceptedDecision` (`decision_id` after
+Advocate settle), not on WaveSpec. A `BLOCKER_RECOVERY` is at most one spec
+revision per HARD_BLOCKER `proposal_id`; a material new fact mints a new
+`proposal_id` and must pass Advocate again.
 
 ### Reference qualification gate
 
@@ -401,19 +387,20 @@ declare bounded degraded batches; it must not silently drop qualified pairs.
 
 ```text
 loops/<run>/
-  manifest.md
-  state.md                  # rolling compressed state
+  manifest.yaml
+  state/current.yaml
+  hypotheses/<rev>.yaml
   wave-1/
-    spec.yaml
-    slots/
-      LOGS-1/report.md
-      CODE-1/report.md
+    specs/<revision_seq>.yaml
+    preflights/<revision_seq>.yaml
+    slots/<slot-id>/attempts/<attempt-id>/report.md
+    join-receipt.yaml
     merge.md
-    state.md
-    root-graph.md
-    ledger.md
-  wave-2/
-    ...
+    proposals/<proposal_id>.yaml
+    advocate/<proposal_id>.yaml
+  decisions/<decision_id>.yaml
+  deliveries/<event_id>/{chat-summary.md,lifecycle.json}
+  checkpoints/<10|20>/
 ```
 
 `report.md` is the bounded slot report. Use `raw.md` only when a verbatim
@@ -432,7 +419,7 @@ in rolling state.
   slots through a one-by-one loop.
 - Checker slots are read-only and must not write shared run artifacts. Results
   may arrive in any order; the post-wave Merger persists each returned packet
-  under `wave-N/slots/<slot-id>/report.md` before synthesis.
+  under `wave-<n>/slots/<slot-id>/attempts/<attempt-id>/report.md` before synthesis.
 - `merger` is the **join barrier**: delegate it once after every slot returns
   or has an explicit terminal failure. Do not start a merger per slot.
 - Later waves remain dependency-ordered after the merger, but every independent
@@ -449,25 +436,26 @@ in rolling state.
    evidence references. Wait for `BOOTSTRAP_WAVE_SPEC` before
    dispatching Wave 1.
 3. Before dispatching the first or any later wave, invoke and await the
-   mode-specific checker with group `PREFLIGHT` (`fact-slot` for API or `cursor-fact-slot` for CURSOR), validate its
-   `CAPABILITY_PREFLIGHT` packet against the exact spec revision, and persist
-   `preflight.yaml`. Only READY slots enter fan-out.
+   mode-specific checker with group `PREFLIGHT` (`fact-slot` for API or `cursor-fact-slot` for CURSOR),
+   forward the CapabilityPacket to Merger, and execute the returned
+   `ControllerAction`. Merger persists
+   `wave-<n>/preflights/<revision_seq>.yaml`. Only READY slots enter fan-out.
 4. The default first spec covers **LOGS + CODE + DOCS**. Add **DATA** only
    when the scope actually includes a database or external API contract. When
    the local reference registry is available, Bootstrap selects relevant
    catalogs and adds bounded `BLUEPRINT-SCOUT` slots with explicit
    `CATALOG_ID` values to the same fan-out.
-5. A spec has 1–10 narrow slots per group. Each slot has exactly one
+5. A spec has at most **10 slots per wave**, never 10 per group. Each slot has exactly one
    hypothesis/source and one expected fact. A Scout slot returns zero to three
    candidate reference patterns; a `REFERENCE-COVERAGE` slot checks exactly one
    `qualified_pair`. Dispatch all independent slots concurrently. Slots are
    fact collectors: evidence, source anchor, confidence, and missing
    information—no verdicts.
-6. After the fan-out join, delegate one post-wave Merger. It persists every
-   slot report under the wave's `slots/` directory, writes `merge.md`,
-   `state.md`, `root-graph.md`, and `ledger.md`, then records the synthesis
-   check and answers the Root-depth gate. The synthesis check is not a
-   replacement for Root-depth:
+6. After the fan-out join, delegate one post-wave Merger. It accounts for
+   every planned logical slot exactly once (one effective terminal attempt),
+   writes `join-receipt.yaml`, `merge.md`, evidence ledger, and root graph,
+   then emits a Proposal (`proposal_id`, not `decision_id`). The synthesis
+   check is not a replacement for Root-depth:
    - What fact changed the leading explanation?
    - What evidence contradicts or weakens it?
    - Which root remains unproven?
@@ -483,46 +471,32 @@ candidate reference entries, builds sparse `qualified_pairs`, and records
    - Do we need to dig deeper **to meet `success_criteria`**?
    - What next question would expose another layer (down to API/runtime/language
      semantics if needed)?
-8. After every post-wave Merger decision, select Advocate mode in this order:
-   - `decision_kind: HARD_BLOCKER` → go to step 10 (**HARD**) regardless of
-     root confidence.
-   - Candidate soft lock only when `root >= 96%`, Root-depth PASS, **and**
-     (`product_goal_met: yes` **or** `title_only_scope: true`) → go to step 9
-     (**SOFT**). If root ≥96% but `product_goal_met` is no and scope is not
-     title-only, treat as hard-path incomplete goal: return/continue
-     `NEXT_WAVE_SPEC` or `HARD_BLOCKER`/`WAITING_USER` — do not soft-END.
-   - `root < 96%` / incomplete Root-depth / unmet `success_criteria` without
-     title-only scope → go to step 10 (**HARD**).
-   Do not repeat completed slots.
-9. **SOFT path.** Delegate `Advocate (devil)` exactly once for this
-   `decision_id` (the verified Advocate model / `__MODEL_ADVOCATE__`, picker-verified) as an
-   advisory audit. Soft cannot undo the locked 96% success and cannot
-   auto-trigger a next wave. Packet must include `success_criteria` and
+8. After every post-wave Merger Proposal, Orchestrator executes
+   `CALL_ADVOCATE` once for that `proposal_id` (picker `__MODEL_ADVOCATE__`).
+   Do not repeat completed slots. POST_WAVE `NEXT_WAVE_SPEC` at wave 10/20
+   authorizes Boss checkpoint evaluation, not dispatch of wave N+1. Wave 21
+   is forbidden.
+9. **Advocate settlement.** Merger persists `AdvocatePacket` and only then
+   mints `decision_id`. Packet must include `success_criteria` and
    `goal_closure`.
-   - `CLEAN` → deliver the final five-part Chat summary. No HOLE block.
-   - `HOLE` → deliver Chat summary plus optional `### HOLE — identified gap`
-     (max 2 paragraphs). Show `SINGLE_NEXT_CHECK` to USER; follow-up dig only
-     on explicit USER command.
-10. **HARD path.** Delegate `Advocate (devil)` exactly once before
-   dispatch/accept/stop with the compact packet (decision identity, leading
-   root, Root-depth, synthesis, `success_criteria` / `goal_closure`,
-   reference predicates, blocker/access state, artifact refs). `devil`
-   returns `ATTACK_PACKET` only; it does not write `loops/**`, spawn slots,
-   decide the outcome, or replace `boss`.
-   - `NEXT_WAVE_SPEC` + `CLEAN` → dispatch documented gaps via parallel fan-out.
-   - `HOLE` → one falsifiable `SINGLE_NEXT_CHECK` that advances
-     `success_criteria` (or required access) as one-check NEXT or one
-     interpretive Merger re-synthesis. Forbidden: reframing onto a title
-     keyword when `title_only_scope` is false and product PASS remains open.
-   - `HARD_BLOCKER` → exactly one `BLOCKER_RECOVERY` handoff under the original
-     `decision_id`. Merger returns either a one-check `NEXT_WAVE_SPEC` or the
-     same blocker with `recovery_attempted: true` and the precise precondition.
-     Only the confirmed recovery blocker may stop. Do not invent unavailable
-     access or spin after one recovery attempt.
-11. Never run a Merger⇄Advocate chat loop and never run a second Advocate on
-    the same `decision_id`. Soft does not replace hard. Terminal `END` (after
-    soft CLEAN/HOLE) or a confirmed recovery blocker must deliver the full
-    five-part English Chat summary; mid-wave stays at one status line or silence.
+   - `END + CLEAN` → deliver the five-part Chat summary.
+   - `END + HOLE` material → revised NEXT proposal; immaterial → END +
+     recorded rationale, then Chat summary.
+   - `NEXT + CLEAN` → accept NEXT (PREFLIGHT next wave, or CALL_BOSS at 10/20,
+     or ASK_USER after checkpoint 20).
+   - `NEXT + HOLE` → one falsifiable check as a revised NEXT proposal.
+   - `HARD_BLOCKER` → exactly one `BLOCKER_RECOVERY` under that
+     `proposal_id` (not at wave 20). Capability unchanged → accept
+     HARD_BLOCKER and deliver; material new fact → new `proposal_id` +
+     Advocate. `devil` returns `AdvocatePacket` only; it does not write
+     `loops/**`, spawn slots, decide the outcome, or replace `boss`.
+10. After accepted L1 END, call Implementer only when
+    `implementation_authorized=true`. Analysis-only requests stay
+    `NOT_REQUESTED`. ImplementationReceipt is not product success.
+11. Never run a Merger⇄Advocate chat loop. Terminal `END`, confirmed
+    HARD_BLOCKER, WAVE_CAP, or ONE_WAVE pause (`wave_result`) must deliver
+    Chat summary from the Merger DeliveryPacket; mid-wave stays at one
+    status line or silence.
 
 ## Evidence routing
 
@@ -544,9 +518,11 @@ remains read-only. Durable memory is the run artifact set, not raw chat history.
 
 ## Chat summary ALWAYS (UNIVERSAL — any `/loop-*` / `/rkx-loop`)
 
-**MUST** write the complete result in the USER chat in **English** on the **first** delivery
+**MUST** deliver the complete result in the USER chat in **English** on the **first** delivery
 of a leaf / L1 STOP / phase conclusion / validate verdict / accepted `END` / confirmed
-recovery `HARD_BLOCKER`.
+recovery `HARD_BLOCKER` / ONE_WAVE pause / WAVE_CAP.
+Merger persists `deliveries/<event_id>/chat-summary.md`; Orchestrator delivers
+the DeliveryPacket and writes no files.
 `loops/<run>/**` — evidence SoT; **must not** replace the chat with a path to the run.
 
 ### Definition of “full Chat summary delivered” (binding)
@@ -678,7 +654,7 @@ The UI renders an empty saved candidate list after a sync job failed; a nearby c
 
 **Tail / access blocker:** the current settings response is unavailable without authentication (`401`); an authenticated context is required.
 **Where:** *RUNTIME-1 · 92% · Grok 4.5 High (role binding); Merger decision · 96% · GPT-5.6 Terra High (role binding)*
-**Advocate:** *not run; configured role binding: GLM 5.2 Max · status PENDING*
+**Advocate:** *not run; configured role binding: `__MODEL_ADVOCATE__` · status PENDING*
 ```
 
 **Forbidden in part 5 (contract FAIL):**
@@ -727,13 +703,13 @@ after** the full five-part result has been delivered in this dig.
 
 1. **UI/business + code anchors** — module / block / element + business function + code anchor; part 1 quotes `success_criteria`.
 2. **Part 5 Verdict:** **✅/❌** + exact `%` + **quoted `success_criteria`** + `goal_closure` line + one business sentence + factual synthesis + arbitrary-length causal chain; each link contains **Basis**/**Where** (evidence-id · exact % · factual model), and the real tail/Advocate is stated when present; **harness jargon is forbidden** instead of the verdict (see Chat summary § Part 5).
-3. **Wave Loop Cycle:** bootstrap Merger → parallel groups (**LOGS+CODE+DOCS**, DATA only for DB/API) per `WAVE_SPEC`; post-wave Merger → Root-depth → route `HARD_BLOCKER` to hard Advocate first, then use soft only for locked success; deep bug = many narrow slots; Context7/fetch ≥30 for external APIs/libs; micron; e2e; logs+Postgres. Unconditional `N≥3` floor is **not** restored — slot count comes from evidence-backed `WAVE_SPEC`.
-4. **Deep RC; chat; evidence discipline** — hypotheses are explicitly marked candidates; only evidence from code/PG/logs may be presented as facts. L1 has no product edits.
+3. **Wave Loop Cycle:** bootstrap Merger → parallel groups (**LOGS+CODE+DOCS**, DATA only for DB/API) per `WAVE_SPEC`; post-wave Merger Proposal → Advocate once per `proposal_id` → accepted decision; Boss checkpoints at wave 10/20; deep bug = many narrow slots; Context7/fetch ≥30 for external APIs/libs; micron; e2e; logs+Postgres. Unconditional `N≥3` floor is **not** restored — slot count comes from evidence-backed `WAVE_SPEC` (max 10 per wave).
+4. **Deep RC; chat; evidence discipline** — hypotheses are explicitly marked candidates; only evidence from code/PG/logs may be presented as facts. L1 has no product edits until `implementation_authorized`.
 5. **MCP stack:** Tenets → Crash (cross-cut) → CodeGraph → Postgres; Octocode on narrow anchors. Evidence-driven, not a fixed sequence.
-6. **Success criteria + antipatterns** — mandatory `success_criteria` + `goal_closure` on every run; soft `END` only when `product_goal_met` (or explicit `title_only_scope`); evidence-first over title keywords; Chat part 1 and Verdict must cite the PASS (see Success criteria §).
+6. **Success criteria + antipatterns** — mandatory `success_criteria` + `goal_closure` on every run; accepted `END` only when `product_goal_met` (or explicit `title_only_scope`); evidence-first over title keywords; Chat part 1 and Verdict must cite the PASS (see Success criteria §).
 7. **Logs-first (inside wave LOGS group):** caller-supplied log source / USER log dump → reverse-proxy access/error when present → application runtime logs → `pnpm logs` / docker logs — top-k, **do not** skip. LOGS-group slots start in the first parallel wave together with DOCS/CODE.
 8. **Token economy + slots + retrieval:** models actually selected are recorded at dispatch and in evidence artifacts; `CURSOR-MODELS.md` is policy/binding only, not execution evidence; top-k ~20; full ZZ/log dump is forbidden.
-9. **Crash checks + dual Advocate:** final truth? Soft ≥96% (advisory HOLE block, no auto-next); hard <96% (gate continues). Soft does not replace hard.
+9. **Crash checks + Advocate:** final truth? One `AdvocatePacket` per `proposal_id` (`CLEAN`|`HOLE`); material HOLE is not accepted. Boss is checkpoint-only at waves 10/20.
 10. **No workarounds / hardcodes / BP breaks / plan violations** + ponytail YAGNI/reuse.
 11. **Revert-first by diff:** if validate(diff) is red — attribution FACT ONLY; our L2 → revert hunks → re-plan; not ours → evidence/STOP; surgical forward only with USER `surgically`/`Smash`.
 12. **ASCII / box-drawing** flow diagram in findings/plan/chat (required in Chat summary part 4).
@@ -751,7 +727,7 @@ with an arbitrary questionnaire.
 
 At a terminal Cursor `stop` event, the project hook
 `.cursor/hooks/rkx_write_easy_summary.py` looks up the terminal
-`slack-notification.json` for the current conversation and writes a compact
+lifecycle event for the current conversation by exact event id and writes a compact
 `easy-summarize.md`. A terminal lifecycle artifact may name one validated,
 workspace-relative `capture_dir`; otherwise the file is written under
 `loops/<run>/`. The hook is fail-open, conversation-scoped, and copies only
@@ -770,24 +746,29 @@ Agent Chat does **not** get that DM automatically.
 Local RKX uses two separate message classes:
 
 1. **Attention card:** the deterministic `stop` hook
-   (`.cursor/hooks.json` → `.cursor/hooks/rkx-slack-notify.sh`) reads only the
-   run-scoped `loops/<run>/slack-notification.json`, matches the current
-   `conversation_id`, and posts via Incoming Webhook or `chat.postMessage`
-   only when the user must answer or decide (`waiting_user`, `blocked`,
-   `failed`, `wave_cap`).
+   (`.cursor/hooks.json` → `.cursor/hooks/rkx-slack-notify.sh`) reads the
+   exact lifecycle event at
+   `loops/<run>/deliveries/<event_id>/lifecycle.json` from
+   `state/current.yaml` (`pending_delivery_event_id` / `delivery_ref`),
+   matches the current `conversation_id`, and posts via Incoming Webhook or
+   `chat.postMessage` only when the user must answer or decide
+   (`waiting_user`, `blocked`, `failed`, `wave_cap`). Legacy single-file
+   `slack-notification.json` is readable only when no exact event pointer
+   exists.
 2. **Result card:** the same hook posts exactly once for a completed loop
-   (`completed`) and labels it `Work summary`.
+   (`completed`) and labels it `Work summary`. ONE_WAVE pause uses
+   `wave_result` (chat only, no Slack).
 3. **Full verdict:** after the complete Chat summary is delivered in Cursor, the
    orchestrator may send one separate full verdict via
    `plugin-slack-slack` / `slack_send_message`. The full verdict keeps the
-   canonical five-part format and is never reconstructed from `state.md`.
-   Hook and MCP ownership must not send the same class twice.
+   canonical five-part format and is never reconstructed from
+   `state/current.yaml` prose. Hook and MCP ownership must not send the same
+   class twice.
 
 `started` and `progress` remain valid lifecycle artifacts for auditability but
 are not sent to Slack. Common writer mistakes (`kind=attention|result`) are
-auto-normalized by the hook. Delivery is dual-path: `afterFileEdit` sends
-immediately when `loops/<run>/slack-notification.json` is written, and the
-`stop` hook remains a backup. New artifacts must carry the exact active
+auto-normalized by the hook. The notifier selects by exact event id, never by
+mtime. New artifacts must carry the exact active
 `conversation_id` and a `notification_type` of `attention` or `result`;
 placeholder IDs are invalid. Older artifacts without `notification_type` are
 classified from `kind` for compatibility. The hook selects the newest sendable
@@ -809,9 +790,12 @@ Slack can generate a mobile push; the value belongs only in
   "conversation_id": "cursor-conversation-id",
   "event_id": "unique-lifecycle-event",
   "run_id": "2026-08-07-rkx-example",
-  "wave": "wave-1",
+  "phase_id": "phase-1",
+  "wave_id": 1,
   "kind": "waiting_user",
   "notification_type": "attention",
+  "waiting_reason": "USER_SCOPE",
+  "correlation_id": "corr-1",
   "problem_title": "Options are not visible in the assignment wizard dropdown at step 3",
   "success_criteria": "Operators see assignable options in the wizard dropdown so they can complete assignment",
   "summary": "The product UI shows an empty list because saved workspace settings did not receive candidates from the sync source.",

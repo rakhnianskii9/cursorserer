@@ -24,28 +24,21 @@ PASS ambiguous; soft END only when product goal met or explicit title-only
 scope). Bind the lifecycle notification artifact to the current
 `conversation_id`. The artifact may produce only an `attention` or `result`
 Slack card; `started` and `progress` are audit-only. It must never replace the
-five-part Chat summary or infer a root from `state.md`. Chat part 1 and Verdict
+five-part Chat summary or infer a root from `state/current.yaml`. Chat part 1 and Verdict
 must quote `success_criteria`.
 
 Groups are not sequential stages. Slots must each have one hypothesis/source
-and one expected fact. Checkers verify evidence only and run in the
-background. After all slots return or fail explicitly, delegate one post-wave
-merger. It stores each report under
-`loops/<run>/wave-N/slots/<slot-id>/report.md`, runs the Root-depth gate, and
-returns schema-v1 `NEXT_WAVE_SPEC`, `END`, or `HARD_BLOCKER`. A
-`HARD_BLOCKER` always enters the hard gate; otherwise choose Advocate mode from
-root confidence and Root-depth:
-- `root >= 96%` → **SOFT**: success locked; one advisory Advocate. `CLEAN` →
-  Chat summary. `HOLE` → Chat summary + optional `### HOLE` (max 2 paragraphs); no
-  auto-next; follow-up only on USER command.
-- `root < 96%` → **HARD**: Advocate before dispatch/accept/stop. `CLEAN`
-  continues NEXT; `HOLE` → one falsifiable next-check or re-synthesis;
-  `HARD_BLOCKER` → one `BLOCKER_RECOVERY` (`boss` not in this gate). Soft does
-  not replace hard.
+and one expected fact. Max **10 slots per wave**. Checkers verify evidence only
+and run in the background. After all slots return or fail explicitly, delegate
+one post-wave merger. Checkers write
+`loops/<run>/wave-<n>/slots/<slot-id>/attempts/<attempt-id>/report.md`. Merger
+emits a Proposal; Orchestrator calls Advocate once per `proposal_id`; accepted
+actions are `NEXT_WAVE_SPEC`, `END`, or `HARD_BLOCKER`. POST_WAVE NEXT at wave
+10/20 is a Boss checkpoint, not dispatch of N+1.
 
 Subsequent waves must target recorded gaps and use the same parallel fan-out.
-Stop at soft END with `>= 96%` **and** `product_goal_met` (or disclosed
-`title_only_scope`), or a confirmed hard recovery blocker.
+Stop at accepted END with `>= 96%` **and** `product_goal_met` (or disclosed
+`title_only_scope`), or a confirmed HARD_BLOCKER after at most one recovery.
 
 On stop, deliver **Chat summary ALWAYS** (all 5 parts in one English chat answer):
 business/UI sentence **quoting `success_criteria`**, five-column table, tech facts

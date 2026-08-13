@@ -19,12 +19,12 @@ Symptom
    → Parallel evidence
    → Confidence + CONFIDENCE_BASIS
    → Chat summary
-   → Explicit gate (Smash)
+   → Explicit L2 gate
    → Code change / validate(diff)
 ```
 
 The output is a decision with an evidence trail — not a model answer from thin air.
-Code changes happen only after an explicit gate.
+Code changes happen only when the original request authorized them, or after an explicit Smash gate.
 
 ---
 
@@ -61,13 +61,13 @@ tools    models    browser    logs    mcp    slack    database    api access
 **Preflight resolves into:**
 
 ```text
-ready    waiting_user    blocked    stale_scope
+ready    waiting_user    blocked    replan
 ```
 
 <br>
 
 - `READY` → Dispatch
-- `STALE_SCOPE` → Merger replanning
+- `REPLAN` → Merger new spec revision
 - `WAITING_USER` / `BLOCKED` → Check as-is · Provide · Stop
 - Slack is optional and is not required for this decision.
 
@@ -83,7 +83,7 @@ preflight  (tools · models · browser · logs · mcp · slack · database · ap
         │                      ├── Check as-is → Dispatch (may be degraded)
         │                      ├── Provide     → wait → preflight again
         │                      └── Stop        → no dispatch
-        └── STALE_SCOPE   → Merger replanning
+        └── REPLAN        → Merger new spec revision
 
 ```
 
@@ -105,16 +105,14 @@ Saves evidence packets → Merges facts → Records contradictions
                                                          ↓
 Evaluates confidence + CONFIDENCE_BASIS ← Checks Root-depth ← Updates the root graph
         ↓
-Decides whether a next step is needed → Forms NEXT_WAVE_SPEC / END / HARD_BLOCKER
+Emits a Proposal → Advocate (CLEAN / HOLE) → NEXT_WAVE_SPEC / END / HARD_BLOCKER
 ```
 
 3. **Advocate checks the leading root** and looks for alternative explanations, weak points, and unconfirmed transitions. Important outcomes include:
 - `CLEAN`
 - `HOLE`
-- `HARD_BLOCKER`
-- `BLOCKER_RECOVERY`
 
-When confidence is insufficient, it forms one concrete next check instead of starting an endless argument between agents. When the investigation reaches L1 Stop, Cursor delivers the Chat summary. It contains:
+When the hole is material, Merger revises one concrete next check instead of starting an endless argument between agents. When the investigation reaches L1 Stop, Cursor delivers the Chat summary. It contains:
 
 - Business / UI statement
 - Five-column evidence table
@@ -130,11 +128,11 @@ Smash → Build → validate(diff) → optional Ship
 ```
 
 ```text
-bootstrap → preflight → parallel fan-out → merge → dual advocate
+bootstrap → preflight → parallel fan-out → merge → advocate
         │
-        ├── NEXT_WAVE_SPEC → another wave
-        ├── soft END       → L1 Chat summary
-        └── HARD_BLOCKER   → BLOCKER_RECOVERY / Stop
+        ├── NEXT_WAVE_SPEC → another wave (Boss at 10 / 20)
+        ├── END            → L1 Chat summary
+        └── HARD_BLOCKER   → recovery or Stop
                 │
                 ▼
          Smash → Build / validate(diff) → optional Ship
@@ -171,9 +169,9 @@ Design → Implementation → Validation / deploy gates → Reference coverage
 
 ### Symptom → Chat summary → Smash → Ship
 
-<img src="assets/rkx-loop-flow.png" alt="CURSORCERER RKX loop flow" width="900">
+<img src="assets/rkx-loop-flow1_3.png" alt="CURSORCERER RKX loop flow" width="900">
 
-- Run artifacts are stored under `loops/<run>/`. Individual evidence packets are saved under: `loops/<run>/wave-N/slots/<slot-id>/report.md`
+- Run artifacts are stored under `loops/<run>/`. Individual evidence packets are saved under: `loops/<run>/wave-N/slots/<slot-id>/attempts/<attempt-id>/report.md`
 
 - The run artifacts preserve the investigation state and evidence trail, but they do not replace the required user-facing Chat summary.
 
@@ -190,7 +188,7 @@ Design → Implementation → Validation / deploy gates → Reference coverage
 | **Rules** | `rules/*.mdc` | Workflow, loops, forensics, browser, and token policy |
 | **Skills** | `skills/**/SKILL.md` | Phase and specialized workflows |
 | **Hooks** | `hooks/*.py`, `*.sh` | Lifecycle escalation and human-readable summary |
-| **Schemas** | `schemas/*.json` | Machine-readable protocol contracts |
+| **Schemas** | `schemas/*.json`, `schemas/packets/` | Machine-readable protocol contracts |
 | **Fixtures** | `scripts/fixtures/` | Verification scenarios |
 | **Validators** | `scripts/` | Offline archive and runtime checks |
 | **Reference** | `reference/` | Blueprint registry and telephony catalog |
@@ -200,27 +198,27 @@ Design → Implementation → Validation / deploy gates → Reference coverage
 
 | Role | Responsibility |
 | :--- | :--- |
-| **`rkx-loop`** | Single orchestrator of the investigation loop |
-| **`merger`** | Bootstrap, synthesis, and planning of later waves |
+| **`rkx-loop`** | Readonly dispatch and delivery |
+| **`merger`** | Sole writer of shared run state |
 | **`fact-slot`** | Checking one narrow evidence question |
 | **`blueprint-scout`** | Finding reference patterns and coverage candidates |
 | **`devil`** | Adversarial check of the leading root |
-| **`implementer`** | L2 changes after explicit user permission |
-| **`boss`** | Manual extra check of a disputed decision |
+| **`implementer`** | L2 changes when implementation is authorized |
+| **`boss`** | Checkpoint critic at waves 10 and 20 |
 
 Agents are split by responsibility:
 
 - The evidence agent does not make the final decision
 - Merger does not write product code
 - Advocate does not start a new wave on its own
-- Implementer does not start edits without a user gate
+- Implementer does not start edits unless implementation is authorized
 - The Slack hook does not replace Chat summary
 
 ---
 
 ### 🔐 Public Boundary
 
-The public archive contains examples and contracts. What stays local:
+The public archive contains the control-plane files and contracts. What stays local:
 - Materialized runtime files
 - Project-specific skills
 - Local MCP overlays
@@ -241,7 +239,7 @@ The public archive is installed through Cursor Chat into one of two targets:
 - **Project-local** — `<project>/.cursor` (scoped to that workspace)
 - **User-global** — `~/.cursor` (shared across projects on this machine)
 
-Pick the target before materialization. Do not mix the two without an explicit plan. 
+Pick the target before copying files. Do not mix the two without an explicit plan. 
 
 
 <img src="assets/install-flow.png" alt="portable control-plane install flow" width="900">
@@ -255,7 +253,7 @@ part of the explicit public binary allowlist.
 3. Compares target files
 4. Shows conflicts
 5. Creates a backup
-6. Materializes confirmed examples
+6. Copies confirmed archive files as-is
 7. Writes the install manifest
 8. Runs validation
 

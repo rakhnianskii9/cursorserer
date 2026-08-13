@@ -1,1 +1,4 @@
 *.pyc
+# local export handoff — not part of the public archive
+/updates/
+/skills/cursorcerer-export/

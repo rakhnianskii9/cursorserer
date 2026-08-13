@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rkx-lifecycle-event-v1",
+  "title": "RKX LifecycleEvent v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "event_id", "run_id", "phase_id", "wave_id",
+    "kind", "notification_type", "waiting_reason", "correlation_id",
+    "conversation_id", "problem_title", "summary"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "event_id": {"type": "string", "minLength": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "phase_id": {"type": "string", "minLength": 1},
+    "wave_id": {"type": "integer", "minimum": 0, "maximum": 20},
+    "kind": {"enum": ["wave_result", "waiting_user", "blocked", "completed", "failed", "wave_cap"]},
+    "notification_type": {"enum": ["attention", "result"]},
+    "waiting_reason": {"enum": ["WAVE_CAP", "USER_SCOPE", "OFF_HOST", null]},
+    "decision_id": {"type": ["string", "null"]},
+    "proposal_id": {"type": ["string", "null"]},
+    "correlation_id": {"type": "string", "minLength": 1},
+    "conversation_id": {"type": "string", "minLength": 1},
+    "problem_title": {"type": "string", "minLength": 1},
+    "summary": {"type": "string", "minLength": 1},
+    "blocker": {"type": "string"},
+    "next_action": {"type": "string"},
+    "full_verdict_available": {"type": "boolean"},
+    "full_verdict_url": {"type": "string", "format": "uri"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"kind": {"enum": ["wave_result", "completed"]}}, "required": ["kind"]},
+      "then": {"properties": {"notification_type": {"const": "result"}, "waiting_reason": {"type": "null"}}}
+    },
+    {
+      "if": {"properties": {"kind": {"enum": ["waiting_user", "blocked", "failed", "wave_cap"]}}, "required": ["kind"]},
+      "then": {"properties": {"notification_type": {"const": "attention"}}}
+    },
+    {
+      "if": {"properties": {"kind": {"const": "wave_cap"}}, "required": ["kind"]},
+      "then": {
+        "properties": {
+          "wave_id": {"const": 20},
+          "waiting_reason": {"const": "WAVE_CAP"},
+          "decision_id": {"type": "string", "minLength": 1},
+          "proposal_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"kind": {"enum": ["wave_result", "completed", "blocked"]}}, "required": ["kind"]},
+      "then": {
+        "properties": {
+          "decision_id": {"type": "string", "minLength": 1},
+          "proposal_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"kind": {"const": "waiting_user"}}, "required": ["kind"]},
+      "then": {"properties": {"waiting_reason": {"enum": ["USER_SCOPE", "OFF_HOST"]}}}
+    },
+    {
+      "if": {"properties": {"full_verdict_available": {"const": false}}, "required": ["full_verdict_available"]},
+      "then": {"not": {"required": ["full_verdict_url"]}}
+    }
+  ]
+}

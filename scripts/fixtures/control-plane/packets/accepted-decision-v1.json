@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "decision_id": "dec-1",
+  "proposal_id": "prop-1",
+  "run_id": "fixture-run",
+  "phase_id": "phase-1",
+  "wave_id": 1,
+  "spec_revision": "fixture-run:wave-1:abc",
+  "continuation_policy": "CONTINUOUS",
+  "correlation_id": "corr-1",
+  "action": "END",
+  "origin": "POST_WAVE",
+  "advocate_verdict": "CLEAN",
+  "advocate_material": false,
+  "route_action": "DELIVER"
+}

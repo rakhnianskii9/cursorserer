@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rkx-accepted-decision-v1",
+  "title": "RKX AcceptedDecision v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "decision_id", "proposal_id", "run_id", "phase_id",
+    "wave_id", "spec_revision", "continuation_policy", "action", "origin", "advocate_verdict", "advocate_material",
+    "route_action", "correlation_id"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "decision_id": {"type": "string", "minLength": 1},
+    "proposal_id": {"type": "string", "minLength": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "phase_id": {"type": "string", "minLength": 1},
+    "wave_id": {"type": "integer", "minimum": 1, "maximum": 20},
+    "spec_revision": {"type": "string", "minLength": 1},
+    "continuation_policy": {"enum": ["ONE_WAVE", "CONTINUOUS"]},
+    "correlation_id": {"type": "string", "minLength": 1},
+    "action": {"enum": ["NEXT_WAVE_SPEC", "END", "HARD_BLOCKER"]},
+    "origin": {"enum": ["POST_WAVE", "BOSS_CHECKPOINT"]},
+    "advocate_verdict": {"enum": ["CLEAN", "HOLE"]},
+    "advocate_material": {"const": false},
+    "route_action": {
+      "enum": ["PREFLIGHT", "CALL_BOSS", "DELIVER", "ASK_USER"]
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"action": {"enum": ["END", "HARD_BLOCKER"]}}, "required": ["action"]},
+      "then": {"properties": {"route_action": {"const": "DELIVER"}}}
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {"const": "NEXT_WAVE_SPEC"},
+          "origin": {"const": "POST_WAVE"},
+          "wave_id": {"enum": [10, 20]}
+        },
+        "required": ["action", "origin", "wave_id"]
+      },
+      "then": {"properties": {"route_action": {"const": "CALL_BOSS"}}}
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {"const": "NEXT_WAVE_SPEC"},
+          "origin": {"const": "POST_WAVE"},
+          "wave_id": {"not": {"enum": [10, 20]}},
+          "continuation_policy": {"const": "CONTINUOUS"}
+        },
+        "required": ["action", "origin", "wave_id", "continuation_policy"]
+      },
+      "then": {"properties": {"route_action": {"const": "PREFLIGHT"}}}
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {"const": "NEXT_WAVE_SPEC"},
+          "origin": {"const": "POST_WAVE"},
+          "wave_id": {"not": {"enum": [10, 20]}},
+          "continuation_policy": {"const": "ONE_WAVE"}
+        },
+        "required": ["action", "origin", "wave_id", "continuation_policy"]
+      },
+      "then": {"properties": {"route_action": {"const": "DELIVER"}}}
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {"const": "NEXT_WAVE_SPEC"},
+          "origin": {"const": "BOSS_CHECKPOINT"},
+          "wave_id": {"const": 10}
+        },
+        "required": ["action", "origin", "wave_id"]
+      },
+      "then": {"properties": {"route_action": {"const": "PREFLIGHT"}}}
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {"const": "NEXT_WAVE_SPEC"},
+          "origin": {"const": "BOSS_CHECKPOINT"},
+          "wave_id": {"const": 20}
+        },
+        "required": ["action", "origin", "wave_id"]
+      },
+      "then": {"properties": {"route_action": {"const": "ASK_USER"}}}
+    },
+    {
+      "if": {"properties": {"origin": {"const": "BOSS_CHECKPOINT"}}, "required": ["origin"]},
+      "then": {"properties": {"wave_id": {"enum": [10, 20]}}}
+    }
+  ]
+}

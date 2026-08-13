@@ -1,620 +1,643 @@
-# RKX Loop — Blueprint Scout & Coverage Flow
+# RKX Loop — canonical control-plane topology
 
-> Status: active Cursor control-plane design; runtime picker/model availability
-> and operational QA are checked separately.
->
-> Existing roles: `rkx-loop` orchestrator, `merger`, `fact-slot` /
-> `cursor-fact-slot`, `blueprint-scout` / `cursor-blueprint-scout`, `devil`
-> (Advocate), `implementer`.
->
-> Catalog registry: `${CONTROL_PLANE_ROOT}/reference/blueprint-index.yaml`.
-> Generic snapshot: `${CONTROL_PLANE_ROOT}/reference/system-design-primer/`.
-> Telephony catalog: `${CONTROL_PLANE_ROOT}/reference/telephony/catalog.yaml`.
-> This document describes the active contract; the files under `${CONTROL_PLANE_ROOT}/agents`,
-> `${CONTROL_PLANE_ROOT}/skills` and `${CONTROL_PLANE_ROOT}/rules` remain the runtime source of truth.
+Status: `CANONICAL_IMPLEMENTED` (active contracts, scenario tests, exact-event
+notification path, and canonical-run validation are aligned).
 
-`REFERENCE CATALOG` — a pinned local registry of source-backed entries.
-`REFERENCE ENTRY` — one normalized architecture, protocol profile, call flow,
-deployment, interconnection rule, invariant, trade-off or failure mode. System
-Design Primer, IETF RFCs, SIPconnect and 3GPP/IMS are separate catalogs; none
-is an automatic project coding standard.
+This file is the portable source of truth for topology, ownership, and state
+transitions. A contract change is accepted only together with matching schemas,
+fixtures, and scenario/runtime validation.
 
-## 1. One-screen diagram
+Public files in this archive are English. User-facing chat language is owned by
+the installing workspace, not by these files.
 
-```text
-USER: problem X + /rkx-loop
-        │
-        ▼
-ORCHESTRATOR
-  asks API/Cursor
-  stores problem_title + conversation_id
-        │
-        ▼
-MERGER: BOOTSTRAP
-  creates manifest
-  forms initial hypotheses
-  returns BOOTSTRAP_WAVE_SPEC
-        │
-        ▼
-WAVE 1 — one parallel fan-out
-        │
-        ├── LOGS slots
-        ├── CODE slots
-        ├── DOCS slots
-        ├── DATA slots, if there is DB/API scope
-        └── BLUEPRINT-SCOUT
-              ├── receives the problem and initial hypotheses
-              ├── selects catalog_id and reads the reference catalog
-              └── returns candidates and links
-        │
-        ▼
-JOIN → MERGER: POST-WAVE
-  combines actual facts and Scout feedback
-  qualifies:
-    ├── eligible_zones
-    ├── qualified_references
-    └── sparse qualified_pairs
-        │
-        ▼
-ADVOCATE — dual-mode for the post-wave decision_id
-  first: root >= 96%?
-        │
-        ├── soft (>=96%): advisory; CLEAN → Chat summary; HOLE → block without auto-next
-        └── hard (<96%): gate; CLEAN/HOLE/BLOCKER_RECOVERY as before
-        │
-        ▼
-REFERENCE-COVERAGE WAVE, if needed
-  qualified_pairs only, after relevance/applicability/causal/impact gates
-  one narrow check for each qualified pair
-  all independent pairs in parallel
-        │
-        ▼
-JOIN → MERGER → DUAL ADVOCATE → NEXT / END / BLOCKER
-        │
-        ▼
-L1 STOP → Chat summary ALWAYS → USER gate
-        │
-        ├── `Smash`
-        │       → implementer → Build / validate(diff)
-        │
-        └── «Ship» / «Build docker»
-                → only after green diff validation
-```
+## 1. Control-plane shape
 
-## 2. Qualification gate before coverage
+### 1.1 Machine contracts
 
-Scout candidates are not automatically coverage targets. Merger builds
-`qualified_pairs` instead of dispatching the full candidate-zone Cartesian
-product.
+Closed schemas exist for:
+`RequestEnvelope`, `WaveSpec`, `CapabilityPacket`, `PreflightDecision`,
+`ControllerAction`, `SlotReport`, `SlotReceipt`, `DispatchReceipt`,
+`JoinReceipt`, `Proposal`, `AdvocatePacket`, `BossPacket`, `AcceptedDecision`,
+`CurrentState`, `DeliveryPacket`, `LifecycleEvent`, `ImplementationRequest`,
+and `ImplementationReceipt`.
 
-```text
-qualified_pair =
-  zone_relevance >= 70%
-  AND reference_applicability >= 70%
-  AND blueprint_applicability >= 70% when the legacy alias is present
-  AND relation ∈ {root_zone, causal_predecessor}
-  AND verification_target ∈
-      {invariant, contract, failure_mode, flow_transition,
-       protocol_requirement, deployment_boundary,
-       reference_architecture, interconnection_contract}
-  AND impact_targets intersects
-      {root_hypothesis, remediation_plan, root_confidence}
-  AND every percentage has evidence + CONFIDENCE_BASIS
-```
+- `proposal_id` exists before the gate; `decision_id` appears only after an
+  accepted decision.
+- Controlling **decisions** are exactly three:
+  `NEXT_WAVE_SPEC | END | HARD_BLOCKER`.
+- Controlling **runtime actions** are the closed `ControllerAction.action`
+  enum. Decision ≠ action. The orchestrator executes only a ControllerAction.
+- `decision_kind` and open status enums are absent from the control loop.
+  Domain conclusions live in `finding_kind` and do not drive transitions.
+- Capability observation is separate from Merger decisions:
+  `READY | UNAVAILABLE | STALE | INVALID` are not transition actions.
+- Every packet carries `run_id`, `phase_id`, `wave_id`, `spec_revision`,
+  `correlation_id`, and the parent artifact identity.
 
-```text
-coverage_decision:
-  REQUIRED     → at least one qualified pair can change root/plan/confidence
-  OPTIONAL     → reference is relevant but cannot change this investigation
-  NOT_NEEDED   → no pair passes the qualification predicate
-  NOT_EVALUATED → Bootstrap has not merged Scout evidence yet
-```
+### 1.2 Write ownership
 
-`coverage_required: true` is valid only for `REQUIRED`. A declared
-`coverage_budget` limits the dispatch. Budget overflow requires explicit Merger
-triage or marked degraded batches; no qualified pair may be silently dropped.
+- Orchestrator is `readonly: true`. It does not write preflight, Advocate,
+  Boss, summary, or lifecycle artifacts.
+- Checker/Scout writes only the write-once
+  `slots/<slot-id>/attempts/<attempt-id>/report.md` and returns a `SlotReceipt`
+  with path/hash/`attempt_id`. The logical slot stays one; attempt identity is
+  unique. A late receipt with a foreign `attempt_id` does not join.
+- Merger is the only writer of shared run/wave artifacts: manifest,
+  `wave-<n>/specs/<revision_seq>.yaml`, `wave-<n>/preflights/<revision_seq>.yaml`,
+  join, ledger, root graph, proposal, Advocate/Boss packets, accepted
+  decision, current state, delivery, and lifecycle event. CAS: writing
+  `state/current.yaml` is allowed only when
+  `current.state_revision == ControllerAction.expected_state_revision`.
+  Otherwise `STALE_TRANSITION`.
+- Advocate and Boss are readonly: they return packets to Merger and do not
+  create decisions or waves.
+- Implementer writes only approved product changes and its own immutable
+  implementation report.
 
-## 3. Detailed flow from the first message
+### 1.3 Executor routing
 
-### 3.1. USER starts the loop
+- Active routes are `API | CURSOR` only. CODEX is absent from routing.
+- Executor choice does not change schema, ownership, or wave semantics.
+- Historical CODEX mentions belong only in explicitly archival documents.
 
-```text
-┌──────────────────────────────────────────────────────────────────────┐
-│ USER                                                                 │
-│                                                                      │
-│ Message:  “We have problem X”                                       │
-│ Command:  /rkx-loop <scenario or symptom>                          │
-└──────────────────────────────────┬───────────────────────────────────┘
-                                   │
-                                   ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│ ORCHESTRATOR                                                         │
-│                                                                      │
-│ 1. Asks for token mode: API or Cursor                               │
-│ 2. Preserves the original problem_title without replacing it with a  │
-│    root hypothesis                                                    │
-│ 3. Preserves the current conversation_id                              │
-│ 4. Delegates Merger in BOOTSTRAP mode                                │
-└──────────────────────────────────┬───────────────────────────────────┘
-                                   │
-                                   ▼
-```
+### 1.4 Wave engine
 
-Advocate is not invoked at this stage. Bootstrap plans the first wave; it is
-not a post-wave decision.
+- Fan-out is one parallel batch; dependent checks go to the next wave.
+- The slot limit is **per wave**, not per group; max 10.
+- `max_slot_attempts` is set on WaveSpec. Transport failure is not a semantic
+  Orchestrator decision. Redispatch uses the same `slot_id` with a new
+  `attempt_id` and a new write-once path.
+- After every wave: join → Merger proposal → Advocate → accepted decision.
+- A POST_WAVE `NEXT_WAVE_SPEC` at wave 10/20 does **not** authorize dispatch
+  of wave N+1; it enters the Boss checkpoint (`route_action=CALL_BOSS`).
+- No `END`/`HARD_BLOCKER` after wave 10 → Boss checkpoint 10 → Merger
+  re-synthesis → Advocate; `NEXT_WAVE_SPEC` after that checkpoint opens
+  waves 11–20.
+- After wave 20 without a terminal → final Boss → final Merger → Advocate;
+  wave 21 does not start. `NEXT_WAVE_SPEC` after checkpoint 20 → `ASK_USER`
+  / `WAVE_CAP`.
+- An unresolved final checkpoint → `WAITING_USER` / `WAVE_CAP` plus Slack
+  `attention`.
 
-### 3.2. MERGER: BOOTSTRAP
+### 1.5 L1 and L2
+
+- `RequestEnvelope.implementation_authorized` records whether the original
+  request already authorized product changes.
+- `L1 END` means investigation and implementation scope are complete; the
+  product is not yet changed.
+- When `implementation_authorized=true`, after L1 END the Orchestrator calls
+  Implementer without a second permission prompt.
+- Analysis-only requests never call Implementer; status is `NOT_REQUESTED`.
+- `ImplementationReceipt` ≠ product success. Merger validates the receipt /
+  validation slots and only then records the implementation result.
+- After `VALIDATED` / `FAILED`, Merger writes a terminal LifecycleEvent plus
+  DeliveryPacket (`product=MET` or `NOT_MET`) and Orchestrator delivers to the
+  user.
+- New evidence after implementation opens a new `phase_id`; the accepted L1
+  decision is not rewritten.
+
+### 1.6 Filesystem and resume
+
+- `run_id` equals the `loops/<run_id>/` folder name; aliases are forbidden.
+- Canonical current pointer is `state/current.yaml`. For new runs,
+  `latest-decision.*` is not authoritative.
+- Resume from `state/current.yaml`: `pending_action` and `awaiting_input`;
+  mtime search is forbidden. `pending_action` is a `ControllerAction.action`
+  or `NONE`. After delivering a question: `pending_action=NONE`,
+  `awaiting_input=USER`. `action_id` is the idempotency key; resume reissues
+  the same id until `last_applied_action_id` matches.
+- Shared-state writes are append/write-once revisioned paths plus a CAS
+  update of the current pointer (`state_revision`, `previous_state_revision`,
+  `previous_state_sha256`).
+- WaveSpec/preflight are never overwritten: REPLAN writes
+  `specs/0002.yaml` / `preflights/0002.yaml`; current points at the active
+  revision.
+- Legacy runs do not redefine current contracts without a migration adapter.
+
+### 1.7 Delivery and Slack
+
+- Merger forms the Chat summary and the immutable lifecycle event after an
+  accepted result or `WAITING_USER`.
+- Orchestrator only delivers a ready DeliveryPacket to chat.
+- The notifier reads an exact lifecycle event ref/id; it does not pick an
+  artifact by mtime.
+- `WAVE_CAP` requires `attention`.
+- A notifier error does not change run state and does not start a wave.
+
+### 1.8 Runtime validation
+
+- Fixtures and real
+  `loops/<run>/wave-*/specs|preflights|proposals|join-receipt` plus
+  `decisions/` are validated.
+- Checks include: folder name ≡ `run_id`, parent revisions, unique IDs,
+  complete join of required slots, legal state transitions, writer ownership.
+- Scenario coverage includes normal END, slot timeout, stale preflight,
+  checkpoint 10/20, Slack wave-cap, explicit L2, analysis-only L1,
+  implementation failure, and resume.
+
+## 2. Diagram legend
 
 ```text
-┌──────────────────────────────────────────────────────────────────────┐
-│ MERGER: BOOTSTRAP                                                   │
-│                                                                      │
-│ Receives:                                                            │
-│   - problem_title                                                    │
-│   - initial evidence references                                      │
-│   - token mode                                                       │
-│                                                                      │
-│ Does:                                                                │
-│   - creates a manifest                                                │
-│   - forms evidence-backed hypotheses                                  │
-│   - identifies narrow sources and expected facts                      │
-│   - adds BLUEPRINT-SCOUT to WAVE-1 when a catalog is available         │
-│                                                                      │
-│ Returns: BOOTSTRAP_WAVE_SPEC                                        │
-│ Does not:                                                            │
-│   - invoke Advocate                                                   │
-│   - launch slots itself                                               │
-│   - create a diagnosis from an assumption                             │
-└──────────────────────────────────┬───────────────────────────────────┘
-                                   │
-                                   ▼
+  ───>  call / handoff without a write
+  ~~~>  return of a structured packet
+  [SLOT-WRITE]    slot writes only its own immutable report
+  [MERGER-WRITE]  Merger writes shared run/wave state and decisions
+  [IMPL-WRITE]    Implementer writes the approved product diff and its report
+  [ ? ]           semantic fork that only Merger may decide
+  ╳               forbidden edge
 ```
 
-`Merger` must add Scout to `WAVE_SPEC` itself; the orchestrator does not invent
-slots after receiving the spec. Scout receives only the initial hypotheses and
-candidate zones. The root is not yet proven in the first wave.
-
-### 3.3. WAVE 1: initial facts and early Scout
-
-All independent slots launch in one parallel fan-out. The groups here are scope
-labels, not sequential stages.
+## 3. Executable topology
 
 ```text
-┌──────────────────────────────────────────────────────────────────────┐
-│ WAVE 1 — PARALLEL FAN-OUT                                           │
-│                                                                      │
-│ ┌────────────────┐  ┌────────────────┐  ┌────────────────┐          │
-│ │ LOGS           │  │ CODE           │  │ DOCS           │          │
-│ │ facts from logs │  │ facts from code │  │ docs/contracts  │          │
-│ └────────────────┘  └────────────────┘  └────────────────┘          │
-│                                                                      │
-│ ┌────────────────┐  ┌─────────────────────────────────────────────┐ │
-│ │ DATA           │  │ BLUEPRINT-SCOUT                              │ │
-│ │ DB/API only    │  │ early reference-candidate search               │ │
-│ └────────────────┘  └─────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 0. USER REQUEST                                                              │
+│                                                                              │
+│ intent + scope + optional resume_run_id + executor_mode                      │
+│                                                                              │
+│ continuation_policy:                                                         │
+│   ONE_WAVE       one completed wave, then pause/summary                      │
+│   CONTINUOUS     continue until END / HARD_BLOCKER / WAVE_CAP                │
+│                                                                              │
+│ implementation_authorized:                                                   │
+│   TRUE   original request already requires a fix/implement/change            │
+│   FALSE  original request is analysis only                                   │
+│                                                                              │
+│ executor_mode: API | CURSOR                                                  │
+│ CODEX is absent from the active route                                        │
+└───────────────────────────────┬──────────────────────────────────────────────┘
+                                │
+                                v
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 1. ORCHESTRATOR — READONLY DISPATCH / DELIVERY                               │
+│                                                                              │
+│ Does:                                                                        │
+│   - normalize RequestEnvelope                                                │
+│   - execute exactly the ControllerAction Merger returned                     │
+│   - start independent slots in one parallel batch                            │
+│   - wait for returns and form a transport-only DispatchReceipt               │
+│   - forward packets to Merger                                                │
+│   - deliver a ready DeliveryPacket to the user                               │
+│                                                                              │
+│ Does not:                                                                    │
+│   ╳ write any run/product file                                               │
+│   ╳ create hypotheses/spec/preflight/proposal/decision/summary               │
+│   ╳ choose END/NEXT/BLOCKER                                                  │
+│   ╳ treat timeout as evidence                                                │
+│   ╳ call Implementer without implementation_authorized                       │
+│                                                                              │
+│ RequestEnvelope:                                                             │
+│   run_id? | resume_run_id? | conversation_id | intent | scope                │
+│   executor_mode | continuation_policy                                        │
+│   implementation_authorized | correlation_id                                 │
+└───────────────────────────────┬──────────────────────────────────────────────┘
+                                │ bootstrap | resume | user_response
+                                v
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 2. MERGER / RUN CONTROLLER — SHARED-STATE OWNER                              │
+│                                                                              │
+│ [run_id supplied?]                                                           │
+│   ├─ NO                                                                      │
+│   │   └─ create run_id == folder name                                        │
+│   │      [MERGER-WRITE] loops/<run_id>/manifest.yaml                         │
+│   │      [MERGER-WRITE] loops/<run_id>/events/0001-run-created.yaml          │
+│   │      [MERGER-WRITE] loops/<run_id>/state/current.yaml                    │
+│   │                                                                          │
+│   └─ YES                                                                     │
+│       └─ load exactly state/current.yaml                                     │
+│          [resume action matches pending_action?]                             │
+│          ├─ NO  ~~~> ControllerAction: EXPLAIN_INVALID_RESUME                │
+│          └─ YES ──> continue the recorded transition only                    │
+│                                                                              │
+│ [scenario/scope sufficient?]                                                 │
+│   ├─ NO  ──> state WAITING_USER ~~~> ControllerAction: ASK_USER              │
+│   └─ YES                                                                     │
+│       └─ evidence-backed hypotheses                                          │
+│          [MERGER-WRITE] hypotheses/<revision>.yaml                           │
+│          [MERGER-WRITE] wave-<n>/specs/<revision_seq>.yaml                   │
+│          ~~~> ControllerAction: PREFLIGHT                                    │
+└───────────────────────────────┬──────────────────────────────────────────────┘
+                                │ WaveSpec
+                                v
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 3. CAPABILITY PREFLIGHT                                                      │
+│                                                                              │
+│ Orchestrator ───> mode-specific preflight executor                           │
+│ executor ~~~> CapabilityPacket                                               │
+│ Orchestrator ───> Merger CapabilityPacket                                    │
+│                                                                              │
+│ CapabilityPacket per slot:                                                   │
+│   READY | UNAVAILABLE | STALE | INVALID                                      │
+│                                                                              │
+│ Merger checks the exact spec_revision and the full planned slot set          │
+│ [MERGER-WRITE] wave-<n>/preflights/<revision_seq>.yaml                       │
+│ CAS: expected_state_revision must match current.state_revision               │
+│                                                                              │
+│ [Merger PreflightDecision]                                                   │
+│   ├─ DISPATCH                                                                │
+│   │    every REQUIRED slot is executable; OPTIONAL is ready or skipped       │
+│   │    ~~~> ControllerAction: DISPATCH_WAVE                                  │
+│   │                                                                          │
+│   ├─ REPLAN                                                                  │
+│   │    scope/revision/required source is stale                               │
+│   │    [MERGER-WRITE] wave-<n>/specs/<revision_seq+1>.yaml                   │
+│   │    ~~~> ControllerAction: PREFLIGHT                                      │
+│   │                                                                          │
+│   ├─ WAITING_USER                                                            │
+│   │    continuation needs an external user choice                            │
+│   │    [MERGER-WRITE] awaiting_input=USER, pending_action=NONE               │
+│   │    ~~~> ControllerAction: ASK_USER (once per action_id)                  │
+│   │                                                                          │
+│   └─ HARD_BLOCKER_CANDIDATE                                                  │
+│        required evidence is unreachable with no falsifiable substitute       │
+│        ~~~> ControllerAction: CALL_ADVOCATE (blocker proposal)               │
+└───────────────────────────────┬──────────────────────────────────────────────┘
+                                │ ControllerAction: DISPATCH_WAVE
+                                v
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 4. WAVE N — ONE PARALLEL FAN-OUT                                             │
+│                                                                              │
+│                              WaveSpec                                        │
+│                                 │                                            │
+│       ┌───────────────┬─────────┼─────────┬───────────────┐                  │
+│       v               v         v         v               v                  │
+│   LOGS slots      CODE slots  DOCS slots DATA slots   BLUEPRINT/REFERENCE    │
+│                                          only if scope  ordinary slots       │
+│                                                                              │
+│ All independent slots start together.                                        │
+│ If B depends on A's result, B belongs to the next wave.                      │
+│                                                                              │
+│ Slot input:                                                                  │
+│   run_id + phase_id + wave_id + spec_revision + correlation_id + slot_id     │
+│   attempt_id + one hypothesis + bounded source + expected fact + stop        │
+│   depends_on_slot_ids=[] (proof of same-wave independence)                   │
+│                                                                              │
+│ Slot work:                                                                   │
+│   collect bounded evidence                                                   │
+│   [SLOT-WRITE] wave-<n>/slots/<slot-id>/attempts/<attempt-id>/report.md      │
+│   ~~~> SlotReceipt {parent ids, attempt_id, status, report_ref, sha256, model}│
+│                                                                              │
+│ Slot status:                                                                 │
+│   COMPLETE | NOT_APPLICABLE | UNAVAILABLE | FAILED                           │
+│                                                                              │
+│ Slot prohibitions:                                                           │
+│   ╳ does not write shared state/spec/ledger/root/decision                    │
+│   ╳ does not create a diagnosis                                              │
+│   ╳ does not start a sibling or the next wave                                │
+│   ╳ does not decide whether evidence is sufficient                           │
+│                                                                              │
+│ Transport outcome is created by Orchestrator without semantic reading:       │
+│   RETURNED | FAILED | TIMED_OUT | CANCELLED                                  │
+└───────────────────────────────┬──────────────────────────────────────────────┘
+                                │ SlotReceipt[] + DispatchReceipt[]
+                                v
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 5. JOIN → MERGER                                                             │
+│                                                                              │
+│ Merger checks receipts against the immutable WaveSpec revision:              │
+│   - every planned logical slot appears exactly once (effective)              │
+│   - attempt history stays on disk; join keeps one terminal receipt           │
+│   - a late receipt with an inactive attempt_id is ignored                    │
+│   - run/wave/spec revision match                                             │
+│   - report path = slots/<slot-id>/attempts/<attempt-id>/report.md            │
+│   - report hash matches                                                      │
+│   - REQUIRED did not vanish without a terminal transport outcome             │
+│                                                                              │
+│ [invalid/missing receipt?]                                                   │
+│   ├─ transport failure and attempt_id < max_slot_attempts                    │
+│   │    ~~~> ControllerAction: REDISPATCH_SLOT (next attempt_id)              │
+│   ├─ another falsifiable fact can replace it                                 │
+│   │    ~~~> ControllerAction: PREFLIGHT after a new spec revision            │
+│   └─ no substitute                                                           │
+│        └─ HARD_BLOCKER proposal candidate                                    │
+│                                                                              │
+│ [complete join]                                                              │
+│   [MERGER-WRITE] wave-<n>/join-receipt.yaml                                  │
+│   [MERGER-WRITE] evidence-ledger/<revision>.yaml                             │
+│   [MERGER-WRITE] root-graph/<revision>.yaml                                  │
+│   [MERGER-WRITE] wave-<n>/merge.md                                           │
+│                                                                              │
+│ Merger creates a Proposal, not a decision:                                   │
+│   proposal_id + candidate_action                                             │
+│   candidate_action = NEXT_WAVE_SPEC | END | HARD_BLOCKER                     │
+│                                                                              │
+│ [MERGER-WRITE] wave-<n>/proposals/<proposal_id>.yaml                         │
+│ ~~~> ControllerAction: CALL_ADVOCATE                                         │
+└───────────────────────────────┬──────────────────────────────────────────────┘
+                                │ Proposal
+                                v
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 6. ADVOCATE GATE — READONLY CHALLENGE                                        │
+│                                                                              │
+│ Orchestrator ───> Advocate {proposal_id, root, evidence refs, candidate}     │
+│ Advocate ~~~> AdvocatePacket {CLEAN | HOLE, one check if HOLE}               │
+│ Orchestrator ───> Merger AdvocatePacket                                      │
+│ [MERGER-WRITE] wave-<n>/advocate/<proposal_id>.yaml                          │
+│                                                                              │
+│ Advocate:                                                                    │
+│   ╳ does not write a file                                                    │
+│   ╳ does not create a decision/wave                                          │
+│   ╳ does not change the root graph                                           │
+│                                                                              │
+│ [candidate × Advocate]                                                       │
+│                                                                              │
+│   END + CLEAN                 ──> accept END                                 │
+│   END + HOLE material         ──> revised NEXT proposal                      │
+│   END + HOLE immaterial       ──> accept END + recorded rationale            │
+│                                                                              │
+│   NEXT + CLEAN                ──> accept NEXT_WAVE_SPEC                      │
+│   NEXT + HOLE                 ──> revised NEXT with a falsifiable check      │
+│                                                                              │
+│   HARD_BLOCKER + CLEAN/HOLE   ──> ControllerAction: BLOCKER_RECOVERY         │
+│       one BLOCKER_RECOVERY_SPEC revision (≤1 REQUIRED slot) per proposal_id  │
+│       then PREFLIGHT; forbidden at wave 20 / after checkpoint 20             │
+│       cap HARD_BLOCKER → DELIVER only; no second recovery per proposal_id    │
+│       ├─ capability unchanged ──> accept HARD_BLOCKER                        │
+│       └─ material new fact    ──> new proposal_id + CALL_ADVOCATE            │
+│                                                                              │
+│ decision_id appears only here, after settlement.                             │
+└───────────────────────────────┬──────────────────────────────────────────────┘
+                                │ accepted candidate
+                                v
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 7. ACCEPTED DECISION + WAVE COUNTER                                          │
+│                                                                              │
+│ [MERGER-WRITE] decisions/<decision_id>.yaml                                  │
+│ [MERGER-WRITE] events/<seq>-decision-accepted.yaml                           │
+│ [MERGER-WRITE] state/current.yaml  (CAS: expected_state_revision)            │
+│                                                                              │
+│ POST_WAVE NEXT_WAVE_SPEC at wave 10/20 authorizes checkpoint evaluation,     │
+│ not dispatch of wave N+1.                                                    │
+│                                                                              │
+│ [decision]                                                                   │
+│                                                                              │
+│   END                                                                        │
+│     └─> L1_CONCLUDED ──> DELIVERY ──> optional L2 gate                       │
+│                                                                              │
+│   HARD_BLOCKER                                                               │
+│     └─> L1_BLOCKED ──> DELIVERY                                              │
+│                                                                              │
+│   NEXT_WAVE_SPEC                                                             │
+│     └─> inspect accepted wave number                                         │
+│          ├─ wave 1..9                                                        │
+│          │    ├─ ONE_WAVE   ──> PAUSED_AFTER_WAVE → DELIVER                  │
+│          │    └─ CONTINUOUS ──> PREFLIGHT(next wave)                         │
+│          │                                                                   │
+│          ├─ wave 10 ──> ControllerAction: CALL_BOSS (checkpoint 10)          │
+│          │                                                                   │
+│          ├─ wave 11..19                                                      │
+│          │    ├─ ONE_WAVE   ──> PAUSED_AFTER_WAVE → DELIVER                  │
+│          │    └─ CONTINUOUS ──> PREFLIGHT(next wave)                         │
+│          │                                                                   │
+│          └─ wave 20 ──> ControllerAction: CALL_BOSS (final checkpoint 20)    │
+└───────────────────────────────┬──────────────────────────────────────────────┘
+                                │ checkpoint only
+                                v
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 8. BOSS CHECKPOINTS — AFTER WAVE 10 AND WAVE 20                              │
+│                                                                              │
+│ Boss is invoked only when the checkpoint has no accepted END/HARD_BLOCKER.   │
+│                                                                              │
+│ Merger forms a compact CheckpointPacket:                                     │
+│   current root graph + accepted decision chain + contradictions              │
+│   open gaps + attempted checks + evidence refs + remaining wave budget       │
+│                                                                              │
+│ Orchestrator ───> Boss CheckpointPacket                                      │
+│ Boss ~~~> BossPacket:                                                        │
+│   challenge + alternative roots + confidence basis                           │
+│   duplicated/low-value paths + one highest-value next check                  │
+│                                                                              │
+│ Boss:                                                                        │
+│   ╳ does not write files                                                     │
+│   ╳ does not create NEXT/END/BLOCKER                                         │
+│   ╳ does not start slots/Implementer                                         │
+│                                                                              │
+│ Orchestrator ───> Merger BossPacket                                          │
+│ [MERGER-WRITE] checkpoints/<10|20>/boss.yaml                                 │
+│                                                                              │
+│ Merger re-synthesis uses:                                                    │
+│   all prior accepted state + BossPacket + unresolved evidence gaps           │
+│                                                                              │
+│ [MERGER-WRITE] checkpoints/<10|20>/proposals/<proposal_id>.yaml              │
+│ Orchestrator ───> Advocate ───> Merger                                       │
+│                                                                              │
+│ [checkpoint 10 result]                                                       │
+│   ├─ END          ──> accepted decision → DELIVERY                           │
+│   ├─ HARD_BLOCKER ──> accepted decision → DELIVERY                           │
+│   └─ NEXT         ──> accepted decision → PREFLIGHT wave 11                  │
+│                                                                              │
+│ [checkpoint 20 result]                                                       │
+│   ├─ END          ──> accepted decision → DELIVERY                           │
+│   ├─ HARD_BLOCKER ──> accepted decision → DELIVERY + attention               │
+│   └─ NEXT/HOLE/unresolved                                                    │
+│       └─> wave 21 is forbidden                                               │
+│           [MERGER-WRITE] state = WAITING_USER, pending_action=NONE,          │
+│                           awaiting_input=USER, reason = WAVE_CAP             │
+│           [MERGER-WRITE] lifecycle attention event                           │
+│           └─> CHAT DELIVERY + mandatory Slack attention                      │
+└───────────────────────────────┬──────────────────────────────────────────────┘
+                                │
+                                v
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 9. DELIVERY + SLACK                                                          │
+│                                                                              │
+│ Merger forms the immutable summary/event:                                    │
+│   [MERGER-WRITE] deliveries/<event_id>/chat-summary.md                       │
+│   [MERGER-WRITE] deliveries/<event_id>/lifecycle.json                        │
+│   ~~~> DeliveryPacket {parent ids, event_id, each exact path+sha256, type}   │
+│                                                                              │
+│ Orchestrator ───> user chat                                                  │
+│                                                                              │
+│ WAVE_CAP / unresolved after final checkpoint:                                │
+│   notifier ───> Slack attention                                              │
+│                                                                              │
+│ Notifier reads the exact event ref/id from DeliveryPacket.                   │
+│ ╳ does not search latest by mtime                                            │
+│ ╳ does not change decision/state                                             │
+│ ╳ does not start a wave                                                      │
+│                                                                              │
+│ Notification failure → delivery retry only.                                  │
+│ ONE_WAVE pause → lifecycle kind=wave_result → Chat only, no Slack.           │
+└───────────────────────────────┬──────────────────────────────────────────────┘
+                                │ accepted L1 END
+                                v
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 10. IMPLEMENTER GATE                                                         │
+│                                                                              │
+│ [implementation_authorized in original/current user request?]                │
+│                                                                              │
+│   NO                                                                         │
+│    └─> implementation_status = NOT_REQUESTED                                 │
+│        L1 summary already delivered; Implementer is not called               │
+│                                                                              │
+│   YES                                                                        │
+│    └─> Merger prepares a bounded ImplementationRequest                       │
+│        [MERGER-WRITE] implementation/<phase_id>/request.yaml                 │
+│        Orchestrator ───> Implementer                                         │
+│                                                                              │
+│        Implementer:                                                          │
+│          [IMPL-WRITE] approved product changes                               │
+│          runs relevant diff/build/tests                                      │
+│          [IMPL-WRITE] implementation/<phase_id>/implementer-report.md         │
+│          ~~~> ImplementationReceipt                                          │
+│                                                                              │
+│        Implementer:                                                          │
+│          ╳ does not change L1 root/decision                                  │
+│          ╳ does not broaden approved scope                                   │
+│          ╳ does not declare product success                                  │
+│          ╳ does not start investigation waves                                │
+│                                                                              │
+│        Orchestrator ───> Merger ImplementationReceipt                        │
+│        Merger validates the receipt / requests independent validation slots  │
+│                                                                              │
+│        [validation result]                                                   │
+│          ├─ VALIDATED                                                        │
+│          │    └─> implementation=VALIDATED, product=MET                      │
+│          │        [MERGER-WRITE] terminal LifecycleEvent + DeliveryPacket    │
+│          │        ~~~> ControllerAction: DELIVER → user                      │
+│          ├─ FAILED                                                           │
+│          │    └─> implementation=FAILED, product=NOT_MET                     │
+│          │        [MERGER-WRITE] terminal LifecycleEvent + DeliveryPacket    │
+│          │        ~~~> ControllerAction: DELIVER → user                      │
+│          └─ NEW_EVIDENCE                                                     │
+│               └─> new phase_id linked by caused_by                           │
+│                   original L1 decision remains immutable                     │
+│                   [MERGER-WRITE] DeliveryPacket (new phase opened)           │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### What BLUEPRINT-SCOUT receives
+## 4. State model
 
 ```text
-TASK:
-  find reference candidates relevant to the problem and initial hypotheses
+investigation_status:
+  BOOTSTRAP | ACTIVE | PAUSED_AFTER_WAVE | WAITING_USER | BLOCKED | CONCLUDED
 
-SCOPE:
-  - problem_title
-  - hypothesis_id
-  - candidate zone / file / symbol / contract
-  - open question
-  - reference catalog id selected by Merger
-  - normalized catalog registry and selected catalog index
-  - exact pinned local source refs
+implementation_status:
+  NOT_REQUESTED | AUTHORIZED | IN_PROGRESS | VALIDATING | VALIDATED | FAILED
 
-CATALOG:
-  registry: ${CONTROL_PLANE_ROOT}/reference/blueprint-index.yaml
-  problem_domain: <registry domain tag>
-  catalog_id: system-design | telephony
-  index: <selected catalog index>
-  root: <selected local catalog root>
+product_status:
+  UNKNOWN | NOT_MET | MET
+
+wave_budget:
+  current_wave: 0..20
+  boss_checkpoint_every: 10
+  wave_cap: 20
+  max_slot_attempts: <canonical configured value>
 ```
 
-#### What BLUEPRINT-SCOUT returns
+Examples:
+
+- analysis-only L1 END: investigation `CONCLUDED`, implementation
+  `NOT_REQUESTED`, product `UNKNOWN`
+- original request included code changes and implementation succeeded:
+  investigation `CONCLUDED`, implementation `VALIDATED`, product `MET`
+- unresolved after final checkpoint: investigation `WAITING_USER`,
+  `pending_action=NONE`, `awaiting_input=USER`, reason `WAVE_CAP`,
+  `current_wave=20`
+
+## 5. Ownership matrix
+
+| Component | May invoke | May write | May decide |
+|---|---|---|---|
+| User | entry/resume/implementation authorization | nothing in run | intent and external choice |
+| Orchestrator | Merger, Slot/Scout, Advocate, Boss, Implementer | nothing | nothing semantic |
+| Slot/Scout | bounded evidence tools | own immutable report only | factual slot status only |
+| Merger | no sibling dispatch; returns requested action | all shared run/wave artifacts | proposal, accepted transition after gates |
+| Advocate | no agents | nothing | CLEAN/HOLE challenge only |
+| Boss | no agents | nothing | checkpoint critique only |
+| Implementer | approved product tools | approved product diff + own report | implementation receipt only |
+| Stop-hook notifier | exact lifecycle event → Slack | external delivery/dedup state only | no run decision |
+
+## 6. Scenario matrix
+
+| Scenario | Required path | Forbidden shortcut |
+|---|---|---|
+| New run | Orchestrator → Merger bootstrap → preflight | Orchestrator-created manifest |
+| Resume | `pending_action` + `awaiting_input` on current.yaml | latest file/mtime search |
+| Stale preflight | Merger revised spec → preflight again | dispatch stale slots |
+| Parallel wave | all independent slots in one batch | group-by-group serial dispatch |
+| Slot timeout | DispatchReceipt → Merger REDISPATCH_SLOT / new spec revision / blocker | Orchestrator invents evidence |
+| Normal wave result | join → proposal → Advocate → accepted decision | direct merge → next wave |
+| Accepted NEXT at wave 10 | Boss → Merger re-synthesis → Advocate | direct wave 11 |
+| Accepted NEXT at wave 20 | final Boss → Merger → Advocate → WAITING_USER | wave 21 |
+| Unresolved after wave 20 | Chat summary + mandatory Slack attention | silent stop |
+| L1 END, analysis-only request | deliver summary; no Implementer | automatic code edits |
+| L1 END, original request authorized edits | automatic Implementer handoff | second permission request |
+| Implementer says tests pass | Merger/validation evaluates receipt | self-declared product success |
+| Implementation VALIDATED/FAILED | terminal DeliveryPacket to the user | silent L2 stop without delivery |
+| New facts after implementation | new linked phase | rewrite prior accepted decision |
+
+## 7. Non-negotiable invariants
 
 ```text
-BLUEPRINT_CANDIDATE:
-  blueprint_id: <stable id>
-  reference_id: <canonical stable reference id>
-  catalog_id: <system-design | telephony>
-  reference_type: <reference_architecture | call_flow | deployment_architecture | protocol_profile | interconnection_specification | legacy pattern type>
-  authority: <IETF | SIP Forum | 3GPP | catalog source>
-  source: <exact local index/source anchor at catalog_revision>
-  scope: <normative | industry_profile | reference_architecture | informative>
-  related_hypothesis: <H-id>
-  related_zone: <zone-id or code anchor>
-  applicability: <0%–100%>
-  relation: root_zone | causal_predecessor | unrelated | unknown
-  verification_targets: invariant | contract | failure_mode | flow_transition | protocol_requirement | deployment_boundary | reference_architecture | interconnection_contract
-  expected_evidence: <one concrete trace/config/code/runtime observation>
-  why_relevant: <short evidence-backed reason>
-  unknowns: <what cannot be confirmed in this slot>
-  evidence: <source anchor + code/problem anchor>
-  confidence: <0%–100%>
-  confidence_basis: <why>
+I01  Orchestrator writes zero files.
+I02  Slot writes only its own immutable attempt report.
+I03  Merger is the only writer of shared state and accepted decisions.
+I04  Implementer writes code only when implementation_authorized=true.
+I05  CODEX is absent from active routing.
+I06  run_id equals the run folder name exactly.
+I07  proposal_id and decision_id are different lifecycle identities.
+I08  NEXT/END/HARD_BLOCKER exist only as accepted decisions after gates.
+I09  Every wave join accounts for every planned logical slot exactly once
+     (one effective terminal attempt).
+I10  A dependent check cannot run in the same parallel wave as its prerequisite.
+I11  Wave 11 requires checkpoint 10.
+I12  Wave 21 is forbidden; wave cap is 20.
+I13  Unresolved final checkpoint produces WAITING_USER + Slack attention.
+I14  Boss and Advocate challenge; neither controls transitions.
+I15  L1 END does not imply product MET.
+I16  ImplementationReceipt does not imply VALIDATED.
+I17  Accepted decisions are immutable; changed facts open a new phase/revision.
+I18  Resume and notifier use exact IDs/pointers, never mtime.
+I19  A passing fixture suite is insufficient; real run artifacts must validate.
+I20  Historical/legacy runs cannot redefine current runtime contracts.
+I21  Slot reports are write-once per (slot_id, attempt_id); join selects one
+     effective terminal receipt per logical slot. Late attempts do not join.
+I22  WaveSpec and preflight are write-once per revision_seq; REPLAN mints a
+     new path. Singleton spec.yaml/preflight.yaml are not canonical.
+I23  Orchestrator executes only a ControllerAction; it never infers the next
+     role from decision prose.
+I24  Merger updates current.yaml only when expected_state_revision matches
+     current state_revision (CAS). Mismatch is STALE_TRANSITION, not a diagnosis.
+I25  BLOCKER_RECOVERY is at most one BLOCKER_RECOVERY_SPEC per HARD_BLOCKER
+     proposal_id. Forbidden at wave 20 / after checkpoint 20.
+I26  POST_WAVE NEXT at wave 10/20 authorizes checkpoint evaluation, not
+     dispatch of wave N+1. Wave 20 checkpoint NEXT cannot dispatch wave 21.
+I27  After implementation VALIDATED/FAILED, Merger emits a terminal
+     DeliveryPacket (product MET or NOT_MET).
+I28  ControllerAction.action_id is the idempotency key. Orchestrator executes
+     each id at most once. Resume reissues the same id until
+     last_applied_action_id matches.
+I29  pending_action is the next Orchestrator verb. After ASK_USER delivery,
+     pending_action=NONE and awaiting_input=USER. Resume does not re-ask.
 ```
 
-Scout does not:
+## 8. Canonical guarantees (validation surface)
 
-- declare a reference entry mandatory;
-- prove the root cause;
-- compare the entire codebase with the catalog;
-- decide `END`, `NEXT_WAVE_SPEC`, or `HARD_BLOCKER`;
-- write shared wave artifacts;
-- replace LOGS/CODE/DOCS facts.
+These are required properties of the live loop, not a future checklist:
 
-### 3.4. JOIN and MERGER: POST-WAVE
+- Active agents, skills, commands, schemas, and the RUN template contain no
+  CODEX route.
+- Orchestrator is readonly and has no write paths.
+- Slot / Merger / Advocate / Boss / Implementer ownership matches the matrix.
+- All packet/state schemas exist with closed transition enums, including
+  ControllerAction and CAS fields on CurrentState.
+- Scenario tests cover checkpoint 10 and checkpoint 20, STALE_TRANSITION,
+  attempt identity, revisioned spec paths, and L2 product MET/NOT_MET.
+- Wave 21 cannot be dispatched.
+- An unresolved checkpoint 20 yields `WAITING_USER/WAVE_CAP` and exact-id
+  Slack attention.
+- Analysis-only L1 does not call Implementer.
+- A pre-authorized fix after accepted L1 END calls Implementer automatically.
+- The runtime validator checks real new runs; their artifacts pass.
+- No runtime reader selects authoritative state/delivery by mtime.
 
-After all slots return, the orchestrator waits at the join barrier and delegates
-exactly one post-wave Merger.
+## 9. Blueprint / reference coverage
 
-```text
-┌──────────────────────────────────────────────────────────────────────┐
-│ JOIN                                                                 │
-│                                                                      │
-│ All slot packets returned or received an explicit terminal failure.    │
-│ Merger first saves each packet separately:                             │
-│ loops/<run>/wave-1/slots/<slot-id>/report.md                        │
-└──────────────────────────────────┬───────────────────────────────────┘
-                                   │
-                                   ▼
-┌──────────────────────────────────────────────────────────────────────┐
-│ MERGER: POST-WAVE #1                                                │
-│                                                                      │
-│ 1. Writes merge.md, state.md, root-graph.md, ledger.md                │
-│ 2. Combines LOGS/CODE/DOCS/DATA and BLUEPRINT-SCOUT feedback           │
-│ 3. Runs the synthesis check                                            │
-│ 4. Answers the canonical Root-depth questions                          │
-│ 5. Records root anchors and actually affected zones                    │
-│ 6. Qualifies eligible zones, patterns, and sparse qualified_pairs       │
-│ 7. Accepts coverage_decision: REQUIRED / OPTIONAL / NOT_NEEDED          │
-└──────────────────────────────────┬───────────────────────────────────┘
-                                   │
-                                   ▼
-```
+`BLUEPRINT-SCOUT` is an ordinary slot family inside the wave engine above, not
+a separate orchestrator. Catalog registry:
+`${CONTROL_PLANE_ROOT}/reference/blueprint-index.yaml`.
 
-Merger selects one path:
-
-```text
-┌─────────────────────────────────────────────┐
-│ BLUEPRINT DECISION                          │
-└─────────────────────┬───────────────────────┘
-                      │
-       ┌──────────────┼──────────────┐
-       │              │              │
-       ▼              ▼              ▼
-  NOT_NEEDED       OPTIONAL       REQUIRED
-  no qualified     reference       qualified_pairs
-  pair             without wave    after predicate
-```
-
-Merger's decision is first checked against `root confidence`: soft at `>=96%`,
-hard at `<96%`.
-
-### 3.5. DUAL ADVOCATE after the first wave
-
-```text
-┌──────────────────────────────────────────────────────────────────────┐
-│ POST-WAVE MERGER                                                     │
-│ STEP 1: root >= 96% + Root-depth?                                    │
-└──────────────────────────────────┬───────────────────────────────────┘
-                                   │
-              ┌────────────────────┼────────────────────┐
-              │ >=96%              │ <96%               │
-              ▼                    ▼                    │
-        SOFT ADVOCATE         HARD ADVOCATE             │
-              │                    │                    │
-        CLEAN → Chat summary   CLEAN → NEXT fan-out        │
-        HOLE  → Chat summary   HOLE  → one next-check      │
-                + HOLE block HARD_BLOCKER → recovery    │
-                (no auto-next)                          │
-```
-
-Advocate returns only `ATTACK_PACKET`. It is not Scout, does not choose an
-outcome, create slots, or write artifacts. Soft does not replace hard.
-
-```text
-SOFT CLEAN → final Chat summary
-SOFT HOLE  → Chat summary + advisory HOLE block (max 2 paragraphs); no auto-next
-HARD CLEAN + NORMAL_GAP / REQUIRED → dispatch gaps or REFERENCE-COVERAGE
-HARD HOLE  → one falsifiable SINGLE_NEXT_CHECK
-HARD_BLOCKER → one BLOCKER_RECOVERY; no second Advocate for the same decision_id
-```
-
-### 3.6. REFERENCE-COVERAGE WAVE
-
-This wave launches only if Merger formed
-`coverage_decision: REQUIRED`, `coverage_required: true`, the qualified pairs
-passed all qualification predicates, and Advocate passed this decision through
-`CLEAN`.
-
-```text
-┌──────────────────────────────────────────────────────────────────────┐
-│ REFERENCE-COVERAGE WAVE                                             │
-│                                                                      │
-│ Dispatch set: qualified_pairs                                         │
-│ Not the full zones × catalog entries Cartesian product                 │
-│                                                                      │
-│ ┌─────────────────────┐  ┌─────────────────────┐                    │
-│ │ QUALIFIED-PAIR-1    │  │ QUALIFIED-PAIR-2    │                    │
-│ │ one narrow slot     │  │ one narrow slot     │                    │
-│ └─────────────────────┘  └─────────────────────┘                    │
-│                                                                      │
-│ ┌─────────────────────┐  ┌─────────────────────┐                    │
-│ │ QUALIFIED-PAIR-3    │  │ QUALIFIED-PAIR-4    │                    │
-│ │ one narrow slot     │  │ one narrow slot     │                    │
-│ └─────────────────────┘  └─────────────────────┘                    │
-│                                                                      │
-│ All independent pairs launch in parallel.                             │
-│ Non-applicability is recorded explicitly, not by deleting the pair.    │
-└──────────────────────────────────────────────────────────────────────┘
-```
-
-#### Contract for one coverage slot
-
-```text
-INPUT:
-  zone:
-    zone_id: <id>
-    code_refs: [file:symbol:lines]
-    contract: <if present>
-  reference:
-    blueprint_id: <id or compatibility alias>
-    reference_id: <canonical id>
-    catalog_id: <system-design | telephony>
-    reference_type: <entry type>
-    source_refs: [catalog:file#section]
-  expected_fact:
-    compare one specific invariant / contract / flow state / failure behavior
-
-OUTPUT:
-  zone_id: <id>
-  blueprint_id: <id>
-  reference_id: <canonical id>
-  catalog_id: <catalog id>
-  reference_type: <entry type>
-  status: MATCH | DEVIATION | NOT_APPLICABLE | UNKNOWN
-  code_evidence: [<exact code anchors>]
-  reference_evidence: [<exact catalog anchors>]
-  meaning_for_problem: <connection to the original scenario>
-  confidence: <0%–100%>
-  confidence_basis: <why>
-  missing_evidence: <if UNKNOWN>
-```
-
-`DEVIATION` does not automatically mean “error.” Merger must determine whether
-the difference is:
-
-```text
-an acceptable adaptation
-        or
-an architectural gap
-        or
-an irrelevant difference from the reference entry
-```
-
-### 3.7. JOIN after coverage and the next Advocate
-
-```text
-REFERENCE-COVERAGE slots
-        │
-        ▼
-JOIN
-        │
-        ▼
-MERGER: POST-WAVE
-  - saves each comparison report
-  - verifies that qualified_pairs coverage is closed
-  - does not leave any qualified pairs unprocessed
-  - links deviations to the original problem
-  - updates the root graph and ledger
-        │
-        ▼
-ADVOCATE: new decision_id
-  - verifies the coverage result
-  - verifies the causal link from deviation → problem
-  - challenges cargo-cult conclusions
-        │
-        ▼
-NEXT_WAVE_SPEC / END / HARD_BLOCKER
-```
-
-This is a new post-wave decision, so it requires a new `decision_id` and exactly
-one new Advocate pass. Do not use a second Advocate for the first wave's
-`decision_id`.
-
-## 4. Dual Advocate gate (soft ≥96% / hard <96%)
-
-Advocate is not launched:
-
-- during Bootstrap;
-- after each individual slot;
-- as part of Scout;
-- after `BLOCKER_RECOVERY`.
-
-After post-wave Merger, check `root confidence` first:
-
-```text
-┌──────────────────────────────────────────────────────────────────────┐
-│ POST-WAVE MERGER DECISION                                            │
-│ STEP 1: root >= 96% ?                                                │
-└──────────────────────────────────┬───────────────────────────────────┘
-                                   │
-          ┌────────────────────────┼────────────────────────┐
-          │ >=96%                  │ <96%                   │
-          ▼                        ▼                        │
-       SOFT AUDIT               HARD GATE                   │
-          │                        │                        │
-   CLEAN → Chat summary        CLEAN → NEXT fan-out            │
-   HOLE  → Chat summary        HOLE  → one next-check          │
-           + HOLE block     HARD_BLOCKER → recovery         │
-           (no auto-next)                                   │
-```
-
-Soft does not replace hard. Merger makes the factual decision, the orchestrator
-controls dispatch and mode, and Advocate returns only `ATTACK_PACKET`.
-
-## 5. When the loop ends
-
-```text
-┌──────────────────────────────────────────────────────────────────────┐
-│ ACCEPTED END                                                         │
-│                                                                      │
-│ Allowed only if:                                                     │
-│   - root confidence ≥ 96%                                            │
-│   - Root-depth gate PASS                                             │
-│   - the deep root cause is explained                                  │
-│   - all required evidence gaps are closed                             │
-│   - qualified_pairs coverage is closed if the REQUIRED phase ran       │
-└──────────────────────────────────┬───────────────────────────────────┘
-                                   │
-                                   ▼
-```
-
-### 5.1. Required Chat summary
-
-On `END`, a confirmed recovery blocker, L1 STOP, or phase completion, the
-orchestrator delivers one complete English Chat summary:
-
-```text
-1. Business/UI meaning in one sentence
-2. A five-column table
-3. Concrete technical facts: paths, symbols, evidence, confidence
-4. An ASCII / box-drawing diagram
-5. A human-readable ✅/❌ Verdict
-   - a causal chain
-   - **Basis:** *...*
-   - **Where:** *evidence-id · exact % · factual model*
-```
-
-`loops/<run>/` stores the evidence SoT but does not replace this Chat summary.
-
-### 5.2. L1 → L2 after an explicit USER gate
-
-```text
-L1 evidence / plan / validate_plan
-        │
-        ▼
-L1 STOP
-        │
-        ▼
-USER explicitly writes:
-  `Smash`
-        │
-        ▼
-IMPLEMENTER
-  receives the approved scope and plan
-  does not revisit the root
-  does not launch new checker slots
-        │
-        ▼
-BUILD / VALIDATE_DIFF
-        │
-        ├── red
-        │     → attribution FACT ONLY
-        │     → re-plan / revert-first under the rules
-        │
-        └── green
-              → result ready
-```
-
-Docker does not follow from an ordinary `Build`:
-
-```text
-«Ship» / «Build docker»
-  → only after green validate(diff)
-  → pnpm build:compose
-```
-
-## 6. Side-channel lifecycle
-
-This is not part of the evidence chain, but it is part of the operational flow:
-
-```text
-significant lifecycle transition
-        │
-        ▼
-Merger updates:
-loops/<run>/slack-notification.json
-        │
-        ▼
-stop-hook sends the lifecycle card
-        │
-        ▼
-after the Chat summary is actually delivered
-orchestrator may send one full verdict through Slack MCP
-```
-
-The lifecycle card does not build the root from the global `state.md` and does
-not replace Chat summary.
-
-## 7. Responsibility boundaries
-
-```text
-USER
-  states the problem and provides the L2 gate
-
-ORCHESTRATOR
-  asks for token mode
-  dispatches the spec
-  waits for the join
-  checks 96% FIRST
-  launches the soft or hard Advocate
-  accepts the process's technical outcome
-
-MERGER
-  builds hypotheses
-  saves slot reports
-  synthesizes evidence
-  selects catalogs and qualifies zones/references/pairs
-  selects REQUIRED / OPTIONAL / NOT_NEEDED
-  returns NEXT / END / HARD_BLOCKER
-
-FACT-SLOT
-  checks one narrow source or hypothesis
-  returns a fact and evidence
-  does not diagnose
-
-BLUEPRINT-SCOUT
-  selects reference candidates in the specified catalog_id
-  returns sources and applicability
-  does not prove the root or launch coverage
-
-REFERENCE-COVERAGE SLOT
-  compares one qualified pair zone × reference entry
-  returns MATCH / DEVIATION / NOT_APPLICABLE / UNKNOWN
-
-ADVOCATE / DEVIL
-  dual-mode: soft ≥96% (advisory) / hard <96% (gate)
-  returns ATTACK_PACKET
-  does not write artifacts, launch slots, or decide END
-  soft does not replace hard
-
-IMPLEMENTER
-  writes product code only after an explicit USER gate
-  works only within the approved scope
-```
-
-## 8. Main principle
-
-```text
-Scout searches for possible reference entries.
-Merger selects a catalog and qualifies only causal and impact-relevant pairs.
-Check root >= 96% first: soft audit on success, hard gate below 96%.
-Coverage slots compare only qualified_pairs.
-Merger links a difference from a reference to the root cause only through local
-facts.
-```
-
-A reference entry is a verifiable norm or model, not an automatic project
-standard. A difference from the System Design Primer, IETF, SIPconnect, or IMS
-becomes a problem only when it is proven to be connected to the original user
-scenario, contract, or failure mode.
+A catalog match is not a defect without local causal evidence. Qualification
+(`eligible_zones`, `qualified_pairs`, `coverage_decision`) happens in Merger
+after join, then independent pair checks run in a later wave.

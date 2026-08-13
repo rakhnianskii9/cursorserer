@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rkx-request-envelope-v1",
+  "title": "RKX RequestEnvelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "conversation_id", "intent", "scope", "executor_mode",
+    "continuation_policy", "implementation_authorized", "correlation_id"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "conversation_id": {"type": "string", "minLength": 1},
+    "run_id": {"type": ["string", "null"], "minLength": 1},
+    "resume_run_id": {"type": ["string", "null"], "minLength": 1},
+    "intent": {"type": "string", "minLength": 1},
+    "scope": {"type": "string", "minLength": 1},
+    "executor_mode": {"enum": ["API", "CURSOR"]},
+    "continuation_policy": {"enum": ["ONE_WAVE", "CONTINUOUS"]},
+    "implementation_authorized": {"type": "boolean"},
+    "correlation_id": {"type": "string", "minLength": 1}
+  },
+  "not": {
+    "properties": {
+      "run_id": {"type": "string"},
+      "resume_run_id": {"type": "string"}
+    },
+    "required": ["run_id", "resume_run_id"]
+  }
+}

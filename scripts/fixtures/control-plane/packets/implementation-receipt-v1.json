@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "phase_id": "phase-1",
+  "run_id": "fixture-run",
+  "wave_id": 1,
+  "spec_revision": "fixture-run:wave-1:abc",
+  "decision_id": "dec-1",
+  "status": "COMPLETED",
+  "report_ref": "loops/fixture-run/implementation/phase-1/implementer-report.md",
+  "changed_files": [
+    ".cursor/agents/rkx-loop.md"
+  ],
+  "validation_notes": "ok",
+  "correlation_id": "corr-1"
+}

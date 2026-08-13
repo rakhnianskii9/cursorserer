@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rkx-slot-receipt-v1",
+  "title": "RKX SlotReceipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "phase_id",
+    "wave_id",
+    "spec_revision",
+    "slot_id",
+    "attempt_id",
+    "status",
+    "report_ref",
+    "sha256",
+    "model",
+    "correlation_id"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "wave_id": {"type": "integer", "minimum": 1, "maximum": 20},
+    "spec_revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "correlation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "phase_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "slot_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "attempt_id": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "status": {
+      "enum": [
+        "COMPLETE",
+        "NOT_APPLICABLE",
+        "UNAVAILABLE",
+        "FAILED"
+      ]
+    },
+    "report_ref": {
+      "type": "string",
+      "pattern": "^loops/[^/]+/wave-([1-9]|1[0-9]|20)/slots/[^/]+/attempts/[1-5]/report\\.md$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[A-Fa-f0-9]{64}$"
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

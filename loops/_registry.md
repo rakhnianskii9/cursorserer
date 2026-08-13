@@ -10,14 +10,14 @@ Every run must have:
 
 | Field | Requirement |
 |---|---|
-| `run_id` | Stable filesystem-safe id, matching `loops/<run-id>/` |
-| `conversation_id` | Exact thread/conversation id; Slack stop-hook matching is optional outside Cursor |
-| `token_mode` | `API` or `CURSOR`; paired with the matching billing scope and recorded by the caller |
+| `run_id` | Stable filesystem-safe id = folder name: `DD-MM-YY---HH-MM---slug` under `loops/<run-id>/` |
+| `conversation_id` | Exact thread/conversation id used by chat and notification delivery |
+| `executor_mode` | `API` or `CURSOR`; paired with the matching billing scope |
 | `mode` | `ide` or `auto` |
 | `problem_title` | Original user-facing problem, not a root-hypothesis label |
-| `manifest` | `loops/<run-id>/manifest.md` |
-| `state` | `loops/<run-id>/state.md` |
-| `notification` | `loops/<run-id>/slack-notification.json` |
+| `manifest` | `loops/<run-id>/manifest.yaml` |
+| `state` | canonical `loops/<run-id>/state/current.yaml` |
+| `delivery` | immutable `loops/<run-id>/deliveries/<event-id>/{chat-summary.md,lifecycle.json}` |
 
 ### Mode routing
 
@@ -30,13 +30,19 @@ Every run must have:
 
 - The orchestrator owns dispatch timing and the join barrier.
 - The Merger owns wave artifacts and compressed run state.
-- The Advocate returns an `ATTACK_PACKET` only and never writes this registry
-  or any `loops/**` artifact.
-- The stop-hook reads only the matching run-scoped notification artifact.
+- The Advocate returns `AdvocatePacket CLEAN|HOLE`; the Boss returns
+  `BossPacket`. Both are readonly and Merger persists their packets.
+- A notifier consumes the exact `event_id` and lifecycle ref from a
+  `DeliveryPacket`; it never chooses the newest artifact by mtime. The
+  configured stop hook is the only Slack transport, so MCP delivery cannot
+  duplicate it.
 
 ## Runtime policy
 
 Run records are created and updated during a loop and remain local runtime
 state. The repository commits this schema and the control-plane decisions, not
-the generated run folders. Missing or mismatched run artifacts are a
-fail-open notification condition, never a reason to read another run's state.
+the generated run folders. Missing or mismatched run artifacts are a delivery
+failure for that exact event, never a reason to read another run's state.
+`WAVE_CAP` after the final wave-20 checkpoint must produce an `attention`
+lifecycle event and Slack ping; notification failure never changes run state
+or starts wave 21.

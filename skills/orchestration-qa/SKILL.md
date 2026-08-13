@@ -33,34 +33,34 @@ Goal: validate the active Cursor (`CONTROL_PLANE_ROOT`) RKX-Loop control plane. 
 - [ ] Escalate stubs (if any) live under explicit `escalate/` — not restored as default workflow
 - [ ] L1/L2 gate lexicon consistent between `infrastructure-core.mdc` / `rkx-always-on.mdc`, RKX-Loop agent, and loop skills
 - [ ] Independent checker slots fan out in one concurrent batch; `merger` is a single join barrier and is not dispatched once per slot
-- [ ] Bootstrap Merger returns `BOOTSTRAP_WAVE_SPEC`; post-wave Merger returns
-  `NEXT_WAVE_SPEC`, `END`, or `HARD_BLOCKER`
-- [ ] `${CONTROL_PLANE_ROOT}/agents/devil.md` exists: readonly, the verified Advocate model / `__MODEL_ADVOCATE__`, `ATTACK_PACKET` contract; no `loops/**` writes; no END decision; no slot spawn
-- [ ] Orchestrator/`rkx-loop-core` use **DUAL ADVOCATE**: soft when
-  `root >= 96%` (advisory HOLE block, no auto-next), hard when `root < 96%`
-  (former ALWAYS-ON gate). Soft does not replace hard. Bootstrap and slots do
-  not invoke Advocate
-- [ ] `needs_devil` is backward-compatible metadata only; soft `CLEAN` →
-  Chat summary; soft `HOLE` → Chat summary + 2-paragraph advisory block; hard
-  `CLEAN` continues NEXT; terminal `END` only after the soft root-threshold /
-  Root-depth path, while a hard blocker stops only after confirmed recovery
-- [ ] Hard `HOLE` uses exactly one falsifiable next check for one-check NEXT or
-  one re-synthesis; no Merger⇄Advocate chat loop, no second pass for the same
-  decision, and `boss` is not wired into this gate
-- [ ] A raw hard `HARD_BLOCKER` never terminates: after its Advocate pass exactly
-  one `BLOCKER_RECOVERY` handoff returns one-check NEXT or the same confirmed
-  blocker with `recovery_attempted: true` and a precise access precondition
-- [ ] Each slot packet is persisted under `loops/<run>/wave-N/slots/<slot-id>/report.md` before Merger synthesis
+- [ ] Bootstrap Merger returns a WaveSpec (`BOOTSTRAP_WAVE_SPEC`); post-wave
+  Merger emits a Proposal then, after Advocate, an AcceptedDecision
+  `NEXT_WAVE_SPEC`, `END`, or `HARD_BLOCKER`. Orchestrator executes only a
+  `ControllerAction` and writes zero files
+- [ ] `${CONTROL_PLANE_ROOT}/agents/devil.md` exists: readonly, the verified Advocate model / `__MODEL_ADVOCATE__`, `AdvocatePacket` contract; no `loops/**` writes; no END decision; no slot spawn
+- [ ] Advocate runs once per `proposal_id` (`CLEAN`|`HOLE`). Material HOLE is
+  not an AcceptedDecision. `decision_id` appears only after settlement.
+  Bootstrap and slots do not invoke Advocate. Boss is checkpoint-only at
+  waves 10/20
+- [ ] `HARD_BLOCKER` gets at most one `BLOCKER_RECOVERY` per `proposal_id`
+  (forbidden at wave 20 / after checkpoint 20). No Merger⇄Advocate chat loop
+- [ ] POST_WAVE NEXT at wave 10/20 authorizes Boss checkpoint evaluation, not
+  dispatch of wave N+1. Wave 21 is forbidden
+- [ ] Each slot packet is persisted under
+  `loops/<run>/wave-<n>/slots/<slot-id>/attempts/<attempt-id>/report.md`
+  before Merger join
 - [ ] Each new slot packet and synthesis/Advocate artifact records the factually selected `MODEL`; missing legacy model data is disclosed as unrecorded rather than inferred from role binding
 - [ ] Root-depth gate uses the canonical four questions and is not replaced by an invented questionnaire
-- [ ] `WAVE_SPEC` schema v1 carries `spec_revision`, `token_mode`,
-  billing/credential scope without values, normalized decision enums,
+- [ ] `WAVE_SPEC` schema v1 carries `spec_revision`, `token_mode` (`API|CURSOR`),
+  the paired billing/credential scope (`API_CREDENTIALS|CURSOR_SUBSCRIPTION`) without values,
   hypotheses, one expected fact and expected decision change per slot,
   `REQUIRED|OPTIONAL` slot semantics, correlation/searchability contracts,
-  parallel dispatch/join, artifact references, and stop condition
-- [ ] `CAPABILITY_PREFLIGHT` records the matching spec revision and an explicit
-  orchestrator resolution; only READY slots dispatch, while non-ready OPTIONAL
-  slots are recorded as skipped/degraded
+  parallel dispatch/join, `max_slot_attempts`, artifact references, and stop
+  condition. `decision_kind` is not canonical
+- [ ] Merger writes revisioned `wave-<n>/preflights/<revision_seq>.yaml`.
+  Capability observation is `READY|UNAVAILABLE|STALE|INVALID`. PreflightDecision
+  is `DISPATCH|REPLAN|WAITING_USER|HARD_BLOCKER_CANDIDATE`. Only READY required
+  slots dispatch
 - [ ] `BLUEPRINT-SCOUT` routes to the token-mode-specific read-only Scout,
   carries an explicit `CATALOG_ID`, and reads only the registry, selected
   catalog index, and exact pinned local source refs; selection follows the
@@ -78,10 +78,10 @@ Goal: validate the active Cursor (`CONTROL_PLANE_ROOT`) RKX-Loop control plane. 
 - [ ] Every confidence field is a `0%`–`100%` percentage with `CONFIDENCE_BASIS`; no qualitative, decimal, or missing values remain
 - [ ] Chat summary ALWAYS is restored in `rkx-loop-core` (5 parts + `chat_itog_delivered`) and referenced by orchestrator/commands/rules; `loops/<run>/` is not a chat substitute
 - [ ] Part 5 follows the `rkx-loop-core` binding: arbitrary-length causal chain, business/UI translation, bold `Basis`/`Where` labels with italic bodies, exact percentages, evidence ids, and factual model attribution or explicit role-binding disclosure
-- [ ] Slack lifecycle notifications use the run-scoped
-  `loops/<run>/slack-notification.json` artifact with
-  `conversation_id`/`event_id` correlation, preserve `problem_title`, and do
-  not derive user-facing copy from the globally newest `state.md`
+- [ ] Slack lifecycle notifications use the exact event
+  `loops/<run>/deliveries/<event_id>/lifecycle.json` with
+  `conversation_id`/`event_id` correlation from `state/current.yaml`, preserve
+  `problem_title`, and do not select artifacts by mtime
 - [ ] Slack ownership is split: stop-hook sends the lifecycle card; MCP sends
   at most one full verdict only after `chat_itog_delivered`; missing artifacts,
   mismatched conversations, and transport failures are fail-open
@@ -151,7 +151,7 @@ Goal: validate the active Cursor (`CONTROL_PLANE_ROOT`) RKX-Loop control plane. 
 - [ ] Startup protocol is consistent across rules and RKX-Loop: smallest direct inspection → gap-driven routing → Crash framing only when used
 - [ ] Durable memory is consistently stored as compact cited loop artifacts/living-plan state; no absent Memory MCP is advertised
 - [ ] Solve-loop / completion doctrine is explicit in RKX-Loop and does not contradict always-on rules
-- [ ] Gate lexicon (`Smash`/`Build`/`Ship` vs `Build docker`) consistent everywhere
+- [ ] Gate lexicon (`implementation_authorized` plus later `Smash`/`Build`/`Ship` vs `Build docker`) consistent everywhere
 - [ ] MCP degradation-tag policy is consistent across orchestration files
 - [ ] **Forensic routing** is gap-driven in every active source: focused Read/search first; Tenets only for unknown scope; CodeGraph or Octocode only for a structural gap; Postgres conditional; Crash cross-cutting synthesis. This is consistent across rules and skills
 - [ ] Always-fast discipline (mode=fast by default, full-repo not balanced, ≤6 parallel `rank_files`, no rank∥codegraph batch) is consistent across SKILL/project-tenets/rules

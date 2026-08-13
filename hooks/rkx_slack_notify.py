@@ -121,7 +121,7 @@ def load_notification_artifact(
 
     if not conversation_id:
         return None
-    match = lifecycle.latest_artifact(
+    match = lifecycle.artifact_by_exact_event(
         repo_root,
         conversation_id,
         max_age_seconds=max_age_seconds,
@@ -132,9 +132,10 @@ def load_notification_artifact(
 
 
 def _metadata_line(artifact: dict[str, Any]) -> str:
+    wave_value = artifact.get("wave_id", artifact.get("wave"))
     metadata = [
         _clean_text(artifact.get("run_id"), 160),
-        _clean_text(artifact.get("wave"), 80),
+        _clean_text(str(wave_value) if wave_value is not None else "", 80),
     ]
     return " · ".join(value for value in metadata if value)
 
@@ -161,7 +162,8 @@ def render_card(artifact: dict[str, Any]) -> dict[str, Any] | None:
     if message_type == "attention" and not next_action:
         next_action = "Reply in Cursor and choose the next step."
     run_id = _clean_text(artifact.get("run_id"), 160)
-    wave = _clean_text(artifact.get("wave"), 80)
+    wave_value = artifact.get("wave_id", artifact.get("wave"))
+    wave = _clean_text(str(wave_value) if wave_value is not None else "", 80)
     event_id = _clean_text(artifact.get("event_id"), 255)
     full_verdict_url = _safe_url(artifact.get("full_verdict_url"))
 
@@ -512,18 +514,36 @@ def process(payload: dict[str, Any], repo_root: Path | None = None) -> bool:
 
 
 def process_artifact_file(path: Path) -> bool:
-    """Normalize + immediately deliver one loops/*/slack-notification.json write."""
+    """Normalize and deliver one exact lifecycle artifact write."""
 
     try:
         resolved = path.expanduser().resolve()
     except OSError:
         _log(f"skip write: unreadable path={path}")
         return False
-    if resolved.name != "slack-notification.json":
+    legacy = (
+        resolved.name == "slack-notification.json"
+        and resolved.parent.parent.name == "loops"
+    )
+    canonical = (
+        resolved.name == "lifecycle.json"
+        and resolved.parent.parent.name == "deliveries"
+        and resolved.parent.parent.parent.parent.name == "loops"
+    )
+    if not (legacy or canonical):
         return False
-    if resolved.parent.parent.name != "loops":
-        _log(f"skip write: not under loops/<run>/ path={resolved}")
-        return False
+
+    if canonical:
+        run_dir = resolved.parent.parent.parent
+        state = lifecycle._load_current_state(run_dir)
+        event_id = resolved.parent.name
+        expected_ref = f"loops/{run_dir.name}/deliveries/{event_id}/lifecycle.json"
+        if (
+            state.get("pending_delivery_event_id") != event_id
+            or state.get("delivery_ref") != expected_ref
+        ):
+            _log(f"skip write: lifecycle is not the exact current event path={resolved}")
+            return False
 
     artifact = lifecycle.persist_normalized_artifact(resolved)
     if artifact is None:
@@ -538,7 +558,10 @@ def process_file_edit(payload: dict[str, Any]) -> bool:
     raw_path = payload.get("file_path") or payload.get("filePath") or ""
     if not isinstance(raw_path, str) or not raw_path:
         return False
-    if not raw_path.endswith("slack-notification.json"):
+    if not (
+        raw_path.endswith("/lifecycle.json")
+        or raw_path.endswith("slack-notification.json")
+    ):
         return False
 
     path = Path(raw_path)

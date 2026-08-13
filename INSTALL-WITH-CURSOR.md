@@ -56,8 +56,8 @@ Ask these questions in one compact batch and wait for the user's answers:
 9. Should loop templates, browser guidance, Canvas declarations, and optional
    reference catalogs be materialized? Default: loop templates yes; optional
    capabilities only after confirmation.
-10. Which timezone should portable examples use? Default: `UTC`; substitute the
-    answer for `${TZ}` without changing the archive examples.
+10. Which timezone should portable files use? Default: `UTC`; substitute the
+    answer for `${TZ}` at install time without editing the archive copies.
 
 If an optional capability is unanswered or unavailable, leave it disabled and
 record that fact as `unavailable` or `skipped`. Never invent a placeholder
@@ -187,7 +187,7 @@ the install manifest and backup directory, then:
 
 1. restore each backed-up canonical file to its original path;
 2. remove only files that the manifest says were created by this installation;
-3. leave pre-existing files, credentials, examples, logs, and unrelated
+3. leave pre-existing files, credentials, logs, and unrelated
    project files untouched;
 4. record `rolled_back_at`, restored paths, and skipped paths in the local
    manifest.

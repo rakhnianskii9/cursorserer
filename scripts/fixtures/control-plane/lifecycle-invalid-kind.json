@@ -3,9 +3,12 @@
   "conversation_id": "fixture-conversation",
   "event_id": "fixture-event-invalid-kind",
   "run_id": "fixture-run",
-  "wave": "wave-1",
+  "phase_id": "phase-1",
+  "wave_id": 1,
   "kind": "unknown",
   "notification_type": "attention",
+  "waiting_reason": null,
+  "correlation_id": "corr-1",
   "problem_title": "Invalid lifecycle kind",
   "summary": "This fixture must be rejected because kind is not registered.",
   "full_verdict_available": false

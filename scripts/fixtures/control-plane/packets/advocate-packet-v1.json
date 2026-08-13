@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "run_id": "fixture-run",
+  "phase_id": "phase-1",
+  "wave_id": 1,
+  "spec_revision": "fixture-run:wave-1:abc",
+  "proposal_id": "prop-1",
+  "verdict": "CLEAN",
+  "single_next_check": null,
+  "material": false,
+  "correlation_id": "corr-1"
+}

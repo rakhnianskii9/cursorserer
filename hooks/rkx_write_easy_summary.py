@@ -65,7 +65,7 @@ def _load_terminal_artifact(repo_root: Path, conversation_id: str) -> tuple[Path
             os.environ.get("RKX_SLACK_STATE_MAX_AGE_SEC", "1800"),
         )
     )
-    return lifecycle.latest_artifact(
+    return lifecycle.artifact_by_exact_event(
         repo_root,
         conversation_id,
         max_age_seconds=max_age_seconds,

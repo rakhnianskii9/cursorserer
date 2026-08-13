@@ -1,12 +1,12 @@
 ---
 name: cursor-blueprint-scout
 description: >-
-  Cursor-token-mode read-only reference-catalog scout for one narrow RKX wave
-  slot. It searches the selected local generic or telephony catalog and returns
-  bounded candidates with exact source anchors; it never decides diagnosis or
-  coverage.
+  Cursor-token-mode reference-catalog scout for one narrow RKX wave slot. It
+  searches the selected local generic or telephony catalog, returns bounded
+  candidates with exact source anchors, writes only its own slot report.md,
+  and never decides diagnosis or coverage.
 model: __MODEL_CHECKER__
-readonly: true
+readonly: false
 is_background: true
 ---
 
@@ -25,7 +25,7 @@ packet is the model actually selected at dispatch.
 
 Scout may read only:
 
-- `${CONTROL_PLANE_ROOT}/reference/blueprint-index.yaml`;
+- `.cursor/reference/blueprint-index.yaml`;
 - the selected `catalog_path` specified in the registry;
 - exact local `source_refs` inside the selected catalog root;
 - problem title, initial hypothesis, candidate code anchors, and the open question
@@ -45,25 +45,38 @@ The parent passes:
 
 ```text
 TASK: find relevant reference patterns
-WAVE_ID: <wave>
+RUN_ID / PHASE_ID / WAVE_ID / SPEC_REVISION / CORRELATION_ID
 GROUP: BLUEPRINT-SCOUT
 SLOT_ID: <slot>
+REPORT_PATH: loops/<run_id>/wave-<n>/slots/<slot_id>/attempts/<attempt_id>/report.md
 PROBLEM: <original user scenario>
 HYPOTHESIS: <one candidate hypothesis>
 ANCHORS: <candidate zone/file/symbol/contract>
 OPEN_QUESTION: <one checkable question>
 PROBLEM_DOMAIN: <registry domain tag>
 CATALOG_ID: system-design | telephony
-CATALOG_INDEX: ${CONTROL_PLANE_ROOT}/reference/blueprint-index.yaml
+CATALOG_INDEX: .cursor/reference/blueprint-index.yaml
 CATALOG_PATH: <selected catalog index path>
 EXPECTED_FACT: 1–3 candidate patterns with source refs
 MODEL: <factually selected approved display Model Name>
-STOP: return the bounded scout packet only
+STOP: write report.md then return the bounded scout packet
 ```
 
 ## Output
 
-Return only this compact packet:
+Before returning, write the **complete** scout packet below (all required
+fields, no truncation) write-once to exactly
+`loops/<run>/wave-N/slots/<slot-id>/attempts/<attempt-id>/report.md`. Then return a `SlotReceipt`
+with `schema_version`, `run_id`, `phase_id`, `wave_id`, `spec_revision`, `slot_id`, `attempt_id`, `status`,
+`report_ref`, `sha256`, `model`, and `correlation_id`. Merger must not rewrite
+the report.
+
+The report starts with YAML frontmatter conforming to
+`.cursor/schemas/packets/slot-report-v1.json` and MUST include `attempt_id`.
+`fact` summarizes candidate discovery, `evidence_refs` holds exact catalog/code
+anchors, and the candidate packet below is the Markdown body.
+
+Return this compact packet:
 
 ```text
 FACT: <why candidates were or were not found>
@@ -96,7 +109,9 @@ canonical identity.
 
 ## Prohibitions
 
-- Read-only; never write `${CONTROL_PLANE_ROOT}/**`, `loops/**`, product code, env or secrets.
+- Evidence-only scout; never write `.cursor/**`, product code, env or secrets.
+- Writable path is **only** `loops/<run>/wave-N/slots/<slot-id>/attempts/<attempt-id>/report.md`;
+  never write a sibling raw file.
 - Do not decide `coverage_decision`, `coverage_required`, `END`, `NEXT_WAVE_SPEC`
   or `HARD_BLOCKER`.
 - Do not claim a root cause or convert a candidate pattern into a diagnosis.

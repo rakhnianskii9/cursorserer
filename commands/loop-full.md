@@ -12,7 +12,8 @@ point; use `rkx-loop-core` only when the USER explicitly requests a wave.
 USER arguments: `<slug> <goal> [--skip-grill] [--mode auto]`.
 
 Start with targeted inspection and carry out the requested diagnosis or plan.
-L2 implementation requires an explicit user L2 gate, then delegation to the
+L2 implementation requires `implementation_authorized=true` (original request
+or a later explicit L2 gate), then delegation to the
 internal **implementer** agent; the read-only orchestrator must never carry out
 product edits. Use phases, a run directory, additional tools, or subagents only
 if they make the work clearer. Preserve L1/L2, nginx backup, explicit Docker

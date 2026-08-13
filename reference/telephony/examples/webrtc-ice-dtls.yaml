@@ -1,4 +1,4 @@
-kind: WAVE_DECISION
+kind: BLUEPRINT_COVERAGE_EXAMPLE
 fixture: true
 blueprint:
   catalog_id: telephony

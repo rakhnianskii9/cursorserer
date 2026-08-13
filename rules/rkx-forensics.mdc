@@ -21,14 +21,12 @@ caller/impact analysis, `/rkx-loop`, or `/loop-bug`.
    review decision. Its output is analysis, never uncited evidence.
 5. Durable run memory is `loops/<run>/**` and the living plan. No Memory MCP is
    configured; do not invent one or use raw chat dumps as memory.
-6. Wave continuation is delta-driven. Every post-wave decision checks
-   `root confidence` FIRST, then uses the **DUAL ADVOCATE GATE** from
-   `rkx-loop-core`: soft when `>=96%` (advisory HOLE block, no auto-next);
-   hard when `<96%` (gate continues / recovery). Soft does not replace hard.
-Final user delivery is **Chat summary ALWAYS** (5 parts) from `rkx-loop-core`;
-   run artifacts are not a chat substitute.
+6. Wave continuation is delta-driven; stop at root confidence ≥96% or with a
+   structured hard blocker and one next check — only after exhausted host
+   read-only probes (`always-self-serve-dig-evidence.mdc`); never as
+   “ask USER to curl”.
 
-Postgres remains read-only.
+Postgres remains read-only. Live RO probes are agent-owned self-serve.
 
 ## Skills
 

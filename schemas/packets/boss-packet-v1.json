@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rkx-boss-packet-v1",
+  "title": "RKX BossPacket v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "run_id", "phase_id", "wave_id", "spec_revision",
+    "checkpoint", "checkpoint_decision_id", "challenge", "alternative_roots",
+    "confidence_basis", "duplicated_or_low_value_paths",
+    "highest_value_next_check", "correlation_id"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "phase_id": {"type": "string", "minLength": 1},
+    "wave_id": {"type": "integer", "enum": [10, 20]},
+    "spec_revision": {"type": "string", "minLength": 1},
+    "checkpoint": {"enum": [10, 20]},
+    "checkpoint_decision_id": {"type": "string", "minLength": 1},
+    "challenge": {"type": "string", "minLength": 1},
+    "alternative_roots": {"type": "array", "items": {"type": "string"}},
+    "confidence_basis": {"type": "string", "minLength": 1},
+    "duplicated_or_low_value_paths": {"type": "array", "items": {"type": "string"}},
+    "highest_value_next_check": {"type": "string", "minLength": 1},
+    "correlation_id": {"type": "string", "minLength": 1}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"checkpoint": {"const": 10}}, "required": ["checkpoint"]},
+      "then": {"properties": {"wave_id": {"const": 10}}}
+    },
+    {
+      "if": {"properties": {"checkpoint": {"const": 20}}, "required": ["checkpoint"]},
+      "then": {"properties": {"wave_id": {"const": 20}}}
+    }
+  ]
+}

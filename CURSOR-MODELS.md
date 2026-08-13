@@ -8,13 +8,13 @@ No model API keys belong in this repository.
 
 | Role | Model |
 |---|---|
-| Orchestrator (`rkx-loop`) | `<picker model id; verify during preflight>` |
-| Checkers (`fact-slot`, `cursor-fact-slot`) | `<picker model id; verify during preflight>` |
-| Blueprint Scout (`blueprint-scout`, `cursor-blueprint-scout`) | `<picker model id; verify during preflight>` |
-| Manual Boss | `<picker model id; verify during preflight>` |
-| Advocate (`devil`) | `<picker model id; verify during preflight>` |
-| Merger | `<picker model id; verify during preflight>` |
-| Implementer | `<picker model id; verify during preflight>` |
+| Orchestrator (`rkx-loop`) | `__MODEL_ORCHESTRATOR__` |
+| Checkers (`fact-slot`, `cursor-fact-slot`) | `__MODEL_CHECKER__` |
+| Blueprint Scout (`blueprint-scout`, `cursor-blueprint-scout`) | `__MODEL_CHECKER__` |
+| Boss checkpoint (waves 10/20) | `__MODEL_BOSS__` |
+| Advocate (`devil`) | `__MODEL_ADVOCATE__` |
+| Merger | `__MODEL_MERGER__` |
+| Implementer | `__MODEL_MERGER__` |
 
 Before execution, verify that the current picker/catalog exposes the configured
 variant. If unavailable, stop and ask the USER; never silently substitute a
@@ -30,9 +30,9 @@ selection:
 | `API` | `fact-slot` | `blueprint-scout` | API credentials |
 | `CURSOR` | `cursor-fact-slot` | `cursor-blueprint-scout` | Cursor subscription |
 
-The two modes may resolve to the same approved model binding. No artifact,
-prompt, or policy file may contain credential values, account identifiers, or
-API keys.
+Active routes are `API | CURSOR` only. CODEX is not an active route. The two
+modes may resolve to the same approved model binding. No artifact, prompt, or
+policy file may contain credential values, account identifiers, or API keys.
 
 ## Delegation routing
 
@@ -42,21 +42,18 @@ API keys.
 - `rkx-loop-orchestrator`, `merger`, `boss`, `devil`, `fact-slot`,
   `cursor-fact-slot`, `blueprint-scout`, `cursor-blueprint-scout`, and
   `implementer` are internal delegation roles, not slash commands. `boss` is
-  manual-only and never auto-spawns checker slots.
-- `Advocate (devil)` runs once per post-wave `decision_id` in **dual mode**:
-  soft when `root >= 96%` (advisory; HOLE does not auto-continue), hard when
-  `root < 96%` (former ALWAYS-ON gate; HOLE/BLOCKER_RECOVERY continue). Soft
-  does not replace hard. `needs_devil` is legacy metadata only. It returns
-  `ATTACK_PACKET` only; it does not write `loops/**`, decide any outcome, or
-  spawn slots. Do not reuse `boss` for this gate.
-- `merger` is the bootstrap planner before Wave 1 and the single fan-in,
-  synthesis, Root-depth, and next-wave planner after every completed wave. It
-  is not dispatched once per checker slot. Orchestrator picks soft/hard from
-  root confidence before Advocate.
-- `implementer` is the writable L2 role. It is delegated only after the
-  explicit user gate and an approved implementation scope/plan with relevant
-  Merger scenario/state/root evidence. It does not dispatch checker slots or
-  override Merger/Boss/Devil.
+  checkpoint-only (waves 10/20) and never auto-spawns checker slots.
+- Advocate (`devil`) runs once per Merger `proposal_id` and returns
+  `AdvocatePacket` (`CLEAN`|`HOLE`) only. It does not write `loops/**`, decide
+  transitions, or spawn slots. `decision_id` appears only after Merger
+  settles the gate. Do not reuse `boss` for this gate.
+- `merger` is the sole shared-state writer: bootstrap, preflight decision,
+  join, proposals, accepted decisions, current state, and delivery packets.
+  Orchestrator is readonly and executes only a `ControllerAction`.
+- `implementer` is the writable L2 role. It is delegated when
+  `implementation_authorized=true` (original request or later explicit gate)
+  with Merger `ImplementationRequest`. It does not dispatch checker slots or
+  override Merger/Boss.
 
 ## Binding doctrine
 
@@ -68,4 +65,5 @@ artifacts must record the selected model separately.
 
 ## Scope
 
-This document defines Cursor routing only.
+This document defines Cursor routing only. Topology and ownership live in
+`RKX-LOOP-BLUEPRINT-FLOW.md`.

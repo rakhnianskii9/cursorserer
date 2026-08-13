@@ -63,7 +63,7 @@ FALLBACK_GITIGNORE = """\
 !runtime/logs/
 !runtime/logs/README.md
 !assets/
-!assets/rkx-loop-flow.png
+!assets/rkx-loop-flow1_3.png
 !assets/install-flow.png
 /reference/system-design-primer/README-ja.md
 /reference/system-design-primer/README-zh-*.md
