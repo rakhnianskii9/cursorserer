@@ -274,7 +274,7 @@ MIT. See `LICENSE` and `NOTICE`.
 
 ## 👤 About the author
 
-I'm Vladislav Rakhnianskii, solo founder of **RKX — Ad-to-Revenue OS for Meta Advertisers**.
+I'm Vladislav Rakhnianskii, solo founder of **RKX — Ad-to-Revenue OS for Advertisers**.
 
 RKX connects acquisition, measurement, sales, messaging, and AI workflows around Meta in one operating system.
 
