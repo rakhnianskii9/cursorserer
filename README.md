@@ -278,12 +278,7 @@ I'm Vladislav Rakhnianskii, solo founder of **RKX — Ad-to-Revenue OS for Meta 
 
 RKX connects acquisition, measurement, sales, messaging, and AI workflows around Meta in one operating system.
 
-I have been building the platform full-time since 2024, completely self-funded. We started charging two months ago and currently have:
-- 5 paying customers
-- $900 MRR
-- $3,000+ collected
-- 100% referral-driven growth
-- Zero paid marketing
+I have been building the platform full-time since 2024, completely self-funded. 
 
 The product is already built and operational. I'm currently looking for a **strategic MarTech / SaaS angel investor** to help scale the company.
 
